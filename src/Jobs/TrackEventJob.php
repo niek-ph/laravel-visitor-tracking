@@ -22,9 +22,7 @@ class TrackEventJob implements ShouldQueue
         public readonly TrackingEvent $event,
         public readonly Carbon $timestamp,
         public readonly ?ClientHints $clientHints = null,
-    )
-    {
-    }
+    ) {}
 
     public function handle(): void
     {

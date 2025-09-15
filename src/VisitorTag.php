@@ -10,8 +10,6 @@ class VisitorTag
 {
     /**
      * Retrieve the visitor tag from the request or generate a new one and queue it as a cookie.
-     * @param  Request  $request
-     * @return string
      */
     public function retrieve(Request $request): string
     {
@@ -28,11 +26,8 @@ class VisitorTag
         return $tag;
     }
 
-
     /**
      * Get the visitor tag from the cookies
-     * @param  Request  $request
-     * @return string
      */
     private function getVisitorTagFromCookies(Request $request): string
     {
@@ -41,12 +36,10 @@ class VisitorTag
 
     /**
      * Generate a new visitor tag.
-     * @param  Request  $request
-     * @return string
      */
     private function generate(Request $request): string
     {
-        if (!is_null($user = $request->user())) {
+        if (! is_null($user = $request->user())) {
             return 'user_'.$user->id;
         }
 

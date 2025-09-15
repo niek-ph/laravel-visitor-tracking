@@ -17,7 +17,7 @@ class VisitorTrackingServiceProvider extends PackageServiceProvider
             ->hasMigration('create_visitors_table')
             ->hasMigration('create_events_table')
             ->hasCommand(VisitorTrackingCommand::class)
-            ->hasInstallCommand(function(InstallCommand $command) {
+            ->hasInstallCommand(function (InstallCommand $command) {
                 $command
                     ->publishConfigFile()
                     ->publishAssets()

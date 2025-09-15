@@ -7,7 +7,6 @@ use NiekPH\LaravelVisitorTracking\VisitorTracking;
 
 class EventFactory extends Factory
 {
-
     public function modelName(): string
     {
         return VisitorTracking::$eventModel;

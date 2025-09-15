@@ -11,6 +11,6 @@ class PageViewEvent extends TrackingEvent
         ?string $url = null,
         array $data = []
     ) {
-        parent::__construct( 'page_view', $ipAddress, $userAgent, $userId, $url, $data);
+        parent::__construct('page_view', $ipAddress, $userAgent, $userId, $url, $data);
     }
 }

@@ -41,7 +41,7 @@ class Event extends Model
     {
         return [
             'data' => 'array',
-            'created_at' => 'datetime'
+            'created_at' => 'datetime',
         ];
     }
 
