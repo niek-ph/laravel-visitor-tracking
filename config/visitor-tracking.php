@@ -1,0 +1,32 @@
+<?php
+
+return [
+    /**
+     * Optional: You can customize the database connection.
+     */
+    'db_connection_name' => null,
+    /**
+     * Optional: Provide a custom prefix for the table names.
+     */
+    'table_prefix' => null,
+
+    /**
+     * The queue on which the tracking job should be executed.
+     */
+    'queue_name' => null,
+
+    /**
+     * The name of the cookie that is used to track the visitor.
+     */
+    'cookie_name' => 'visitor_tag',
+
+    /**
+     * The duration of the visitor cookie.
+     */
+    'cookie_duration' => (60 * 60 * 24) * 365,
+
+    /**
+     * Whether client hints are enabled for better device detection.
+     */
+    'enable_client_hints' => true,
+];
