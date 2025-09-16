@@ -1,0 +1,146 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Test before release
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        php: [8.4]
+        laravel: [12.*]
+        stability: [prefer-lowest, prefer-stable]
+        include:
+          - laravel: 12.*
+            testbench: 10.*
+
+    name: Test P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          coverage: none
+
+      - name: Setup problem matchers
+        run: |
+          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          composer update --${{ matrix.stability }} --prefer-dist --no-interaction
+
+      - name: List Installed Dependencies
+        run: composer show -D
+
+      - name: Execute tests
+        run: vendor/bin/pest --ci --stop-on-failure
+        env:
+          APP_ENV: testing
+          LOG_LEVEL: emergency
+
+  publish:
+    name: Publish to Packagist and create release
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Fetch full history for changelog generation
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction
+
+      - name: Extract tag name
+        id: tag
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Run code analysis
+        run: |
+          composer install --dev --prefer-dist --no-interaction
+          vendor/bin/phpstan analyse --no-progress
+
+      - name: Check code formatting
+        run: vendor/bin/pint --test
+
+      - name: Check if package exists on Packagist
+        id: packagist_check
+        run: |
+          PACKAGE_NAME=$(composer config name)
+          if curl -s "https://packagist.org/packages/$PACKAGE_NAME.json" | grep -q '"status":"error"'; then
+            echo "package_exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "package_exists=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Notify about Packagist publishing
+        if: steps.packagist_check.outputs.package_exists == 'false'
+        run: |
+          echo "⚠️  This package is not yet published on Packagist."
+          echo "📦 Please submit your package manually at: https://packagist.org/packages/submit"
+          echo "🔗 Repository URL: ${{ github.server_url }}/${{ github.repository }}"
+
+      - name: Trigger Packagist update
+        if: steps.packagist_check.outputs.package_exists == 'true'
+        run: |
+          PACKAGE_NAME=$(composer config name)
+          echo "🔄 Packagist will automatically update the package: $PACKAGE_NAME"
+          echo "📦 Package URL: https://packagist.org/packages/$PACKAGE_NAME"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
+          generate_release_notes: true  # This generates automatic changelog!
+          draft: false
+          prerelease: false
+          files: |
+            composer.json
+            README.md
+            CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post-release summary
+        run: |
+          echo "✅ Release ${{ steps.tag.outputs.tag }} completed successfully!"
+          echo "🏷️  GitHub Release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.tag.outputs.tag }}"
+          PACKAGE_NAME=$(composer config name)
+          echo "📦 Packagist: https://packagist.org/packages/$PACKAGE_NAME"
+          echo "📥 Install with: composer require $PACKAGE_NAME:^${{ steps.tag.outputs.tag }}"
+          echo ""
+          echo "🔧 Requirements:"
+          echo "   • PHP >= 8.4"
+          echo "   • Laravel >= 12.0"
