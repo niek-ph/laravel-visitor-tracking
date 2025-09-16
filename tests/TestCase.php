@@ -77,12 +77,4 @@ class TestCase extends Orchestra
             ->middleware([AddQueuedCookiesToResponse::class, TrackPageView::class])
             ->name('test.post');
     }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-
-        restore_error_handler();
-        restore_exception_handler();
-    }
 }
