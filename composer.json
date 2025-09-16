@@ -1,6 +1,7 @@
 {
     "name": "niek-ph/laravel-visitor-tracking",
     "description": "This is my package laravel-visitor-tracking",
+    "version": "1.0.0",
     "keywords": [
         "niek-ph",
         "laravel",
