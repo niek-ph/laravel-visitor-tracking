@@ -13,8 +13,7 @@ class VisitorTrackingServiceProvider extends PackageServiceProvider
         $package
             ->name('laravel-visitor-tracking')
             ->hasConfigFile()
-            ->hasMigration('create_visitors_table')
-            ->hasMigration('create_events_table')
+            ->hasMigration('create_visitor_tracking_tables')
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
                     ->publishConfigFile()
