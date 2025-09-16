@@ -20,17 +20,9 @@ readonly class TrackPageView
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
-        // Only track page views for GET requests that return HTML
+
         if ($this->shouldTrackPageView($request, $response)) {
-            VisitorTracking::track(
-                $request,
-                new PageViewEvent(
-                    ipAddress: $request->ip(),
-                    userAgent: $request->userAgent(),
-                    userId: $request->user()?->id,
-                    url: $request->fullUrl(),
-                )
-            );
+            VisitorTracking::track($request, new PageViewEvent($request));
         }
 
         return $response;
@@ -41,7 +33,7 @@ readonly class TrackPageView
      */
     private function shouldTrackPageView(Request $request, Response $response): bool
     {
-        if ($response->isSuccessful()) {
+        if (! $response->isSuccessful()) {
             return false;
         }
 

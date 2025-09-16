@@ -26,7 +26,7 @@ return [
     'cookie_duration' => (60 * 60 * 24) * 365,
 
     /**
-     * Whether client hints are enabled for better device detection.
+     * Whether client hints are enabled for better device detection. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Client_hints
      */
     'enable_client_hints' => true,
 ];

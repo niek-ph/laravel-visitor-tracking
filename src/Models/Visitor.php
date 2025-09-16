@@ -39,11 +39,6 @@ class Visitor extends Model
         'browser',
         'platform',
         'platform_version',
-        'route_name',
-        'data',
-        'created_at',
-        'url',
-        'name',
     ];
 
     protected function casts(): array

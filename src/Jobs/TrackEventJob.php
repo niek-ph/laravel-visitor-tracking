@@ -29,7 +29,7 @@ class TrackEventJob implements ShouldQueue
         $deviceDetector = new DeviceDetector($this->event->userAgent, $this->clientHints);
         $deviceDetector->parse();
 
-        $visitor = VisitorTracking::$visitorModel->updateOrCreate(
+        $visitor = VisitorTracking::$visitorModel::updateOrCreate(
             ['tag' => $this->visitorTag],
             [
                 'tag' => $this->visitorTag,
@@ -43,8 +43,9 @@ class TrackEventJob implements ShouldQueue
             ]
         );
 
-        $visitor->events()->create([
-            'name' => $this->event->name,
+        VisitorTracking::$eventModel::create([
+            'visitor_id' => $visitor->id,
+            'name' => $this->event->getName(),
             'url' => $this->event->url,
             'data' => $this->event->data ?? [],
             'created_at' => $this->timestamp,
