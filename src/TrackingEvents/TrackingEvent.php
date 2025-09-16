@@ -18,7 +18,7 @@ abstract class TrackingEvent
         }
     }
 
-    public ?string $userId {
+    public int|string|null $userId {
         get {
             return $this->userId;
         }

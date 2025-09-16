@@ -2,7 +2,6 @@
 
 namespace NiekPH\LaravelVisitorTracking;
 
-use NiekPH\LaravelVisitorTracking\Commands\VisitorTrackingCommand;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -16,7 +15,6 @@ class VisitorTrackingServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasMigration('create_visitors_table')
             ->hasMigration('create_events_table')
-            ->hasCommand(VisitorTrackingCommand::class)
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
                     ->publishConfigFile()

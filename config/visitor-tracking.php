@@ -2,6 +2,12 @@
 
 return [
     /**
+     * The type of user ID column to create in the migration.
+     * Options: 'uuid', 'ulid', 'bigInteger'
+     */
+    'id_type' => 'bigInteger',
+
+    /**
      * Optional: You can customize the database connection.
      */
     'db_connection_name' => null,
@@ -29,4 +35,28 @@ return [
      * Whether client hints are enabled for better device detection. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Client_hints
      */
     'enable_client_hints' => true,
+
+    /**
+     * User ID configuration
+     */
+    'users' => [
+        /**
+         * The type of user ID column to create in the migration.
+         * Options: 'uuid', 'ulid', 'bigInteger'
+         */
+        'id_type' => 'bigInteger',
+
+        /**
+         * The users table name (for foreign key constraint).
+         * Leave null to use default 'users' table.
+         */
+        'table' => 'users',
+
+        /**
+         * The column name on the users table that this references.
+         * Leave null to use default 'id' column.
+         */
+        'column' => 'id',
+    ],
+
 ];

@@ -33,6 +33,7 @@ class TrackEventJob implements ShouldQueue
             ['tag' => $this->visitorTag],
             [
                 'tag' => $this->visitorTag,
+                'user_id' => $this->event->userId,
                 'user_agent' => $this->event->userAgent,
                 'ip_address' => $this->event->ipAddress,
                 'is_bot' => $deviceDetector->isBot(),

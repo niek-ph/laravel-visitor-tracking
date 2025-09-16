@@ -50,7 +50,10 @@ class Visitor extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        $userModel = config('auth.providers.users.model') ?? User::class;
+        $userColumn = config('visitor-tracking.users.column', 'id');
+
+        return $this->belongsTo($userModel, 'user_id', $userColumn);
     }
 
     public function events(): HasMany

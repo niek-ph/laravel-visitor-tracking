@@ -1,0 +1,97 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $connection = config('visitor-tracking.db_connection_name');
+
+        Schema::connection($connection)
+            ->create($this->getTableName('visitors'),
+                function (Blueprint $table) {
+                    $this->idColumn($table);
+                    $table->string('tag')->unique();
+                    $table->string('ip_address')->nullable();
+                    $table->string('user_agent')->nullable();
+                    $this->addUserIdColumn($table);
+                    $table->boolean('is_bot')->nullable();
+                    $table->string('device')->nullable();
+                    $table->string('browser')->nullable();
+                    $table->string('platform')->nullable();
+                    $table->string('platform_version')->nullable();
+                    $table->timestamps();
+                });
+
+        Schema::connection($connection)
+            ->create($this->getTableName('events'), function (Blueprint $table) {
+                $this->idColumn($table);
+                $this->foreignVisitorIdColumn($table);
+                $table->string('name')->index();
+                $table->string('url')->nullable();
+                $table->json('data')->nullable();
+                $table->timestamp('created_at')->index();
+            });
+    }
+
+    public function down(): void
+    {
+        $connection = config('visitor-tracking.db_connection_name');
+
+        Schema::connection($connection)->dropIfExists($this->getTableName('visitors'));
+        Schema::connection($connection)->dropIfExists($this->getTableName('events'));
+    }
+
+    private function getTableName(string $table): string
+    {
+        return config('visitor_tracking.table_prefix').$table;
+    }
+
+    private function addUserIdColumn(Blueprint $table): void
+    {
+        $userIdConfig = config('visitor-tracking.users', []);
+        $type = $userIdConfig['id_type'];
+        $usersTable = $userIdConfig['users_table'] ?? 'users';
+        $usersColumn = $userIdConfig['users_column'] ?? 'id';
+
+        match ($type) {
+            'uuid' => $table->foreignUuid('user_id')->nullable()->references($usersColumn)->on($usersTable)->onDelete('cascade'),
+            'ulid' => $table->foreignUlid('user_id')->nullable()->references($usersColumn)->on($usersTable)->onDelete('cascade'),
+            'bigInteger' => $table->foreignId('user_id')->nullable()->references($usersColumn)->on($usersTable)->onDelete('cascade'),
+            default => throw new \Exception('Invalid user id type. Must be uuid, ulid or bigInteger.'),
+        };
+    }
+
+    /**
+     * @throws \Exception
+     */
+    private function idColumn(Blueprint $table): void
+    {
+        $idType = config('visitor-tracking.id_type', 'bigInteger');
+
+        match ($idType) {
+            'uuid' => $table->uuid()->primary(),
+            'ulid' => $table->ulid()->primary(),
+            'bigInteger' => $table->id(),
+            default => throw new \Exception('Invalid id type. Must be uuid, ulid or bigInteger.'),
+        };
+    }
+
+    /**
+     * @throws \Exception
+     */
+    private function foreignVisitorIdColumn(Blueprint $table): void
+    {
+        $idType = config('visitor-tracking.id_type', 'bigInteger');
+
+        match ($idType) {
+            'uuid' => $table->foreignUuid('visitor_id')->constrained('visitors')->onDelete('cascade'),
+            'ulid' => $table->foreignUlid('visitor_id')->constrained('visitors')->onDelete('cascade'),
+            'bigInteger' => $table->foreignId('visitor_id')->constrained('visitors')->onDelete('cascade'),
+            default => throw new \Exception('Invalid id type. Must be uuid, ulid or bigInteger.'),
+        };
+    }
+};
