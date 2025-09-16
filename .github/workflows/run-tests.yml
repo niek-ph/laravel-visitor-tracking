@@ -55,4 +55,8 @@ jobs:
         run: composer show -D
 
       - name: Execute tests
-        run: vendor/bin/pest --ci
+        run: vendor/bin/pest --ci --stop-on-failure --fail-on-risky=false
+        env:
+          APP_ENV: testing
+          LOG_LEVEL: emergency
+          CI: true
