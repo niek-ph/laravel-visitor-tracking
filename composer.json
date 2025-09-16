@@ -67,10 +67,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "VisitorTrackingServiceProvider"
+                "NiekPH\\LaravelVisitorTracking\\VisitorTrackingServiceProvider"
             ],
             "aliases": {
-                "LaravelVisitorTracking": "VisitorTracking"
+                "VisitorTracking": "NiekPH\\LaravelVisitorTracking\\Facades\\VisitorTracking"
             }
         }
     },
