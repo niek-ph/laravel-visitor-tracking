@@ -47,7 +47,7 @@ return new class extends Migration
 
     private function getTableName(string $table): string
     {
-        return config('visitor_tracking.table_prefix').$table;
+        return config('visitor-tracking.table_prefix').$table;
     }
 
     private function addUserIdColumn(Blueprint $table): void

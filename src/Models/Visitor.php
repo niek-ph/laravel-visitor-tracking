@@ -16,7 +16,7 @@ class Visitor extends Model
 
     public function getTable(): string
     {
-        return config('visitor_tracking.table_prefix').'visitors';
+        return config('visitor-tracking.table_prefix').'visitors';
     }
 
     public function getConnectionName()

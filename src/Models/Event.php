@@ -16,7 +16,7 @@ class Event extends Model
 
     public function getTable(): string
     {
-        return config('visitor_tracking.table_prefix').'events';
+        return config('visitor-tracking.table_prefix').'events';
     }
 
     public function getConnectionName()
