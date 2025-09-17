@@ -22,7 +22,15 @@ class TrackEventJob implements ShouldQueue
         public readonly TrackingEvent $event,
         public readonly Carbon $timestamp,
         public readonly ?ClientHints $clientHints = null,
-    ) {}
+    ) {
+        if (! is_null($connection = config('visitor-tracking.queue_connection'))) {
+            $this->onConnection($connection);
+        }
+
+        if (! is_null($queue = config('visitor-tracking.queue_name'))) {
+            $this->onQueue($queue);
+        }
+    }
 
     public function handle(): void
     {

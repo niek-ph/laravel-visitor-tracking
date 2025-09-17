@@ -11,6 +11,7 @@ return [
      * Optional: You can customize the database connection.
      */
     'db_connection_name' => null,
+
     /**
      * Optional: Provide a custom prefix for the table names.
      */
@@ -20,6 +21,11 @@ return [
      * The queue on which the tracking job should be executed.
      */
     'queue_name' => null,
+
+    /**
+     * The queue connection on which the tracking job should be executed.
+     */
+    'queue_connection' => null,
 
     /**
      * The name of the cookie that is used to track the visitor.
