@@ -13,17 +13,64 @@ class VisitorTag
      */
     public function retrieve(Request $request): string
     {
-        if (empty($tag = $this->getVisitorTagFromCookies($request))) {
-            $tag = $this->generate($request);
+        $tag = $this->getVisitorTagFromCookies($request);
 
-            Cookie::queue(
-                config('visitor-tracking.cookie_name'),
-                $tag,
-                config('visitor-tracking.cookie_duration')
-            );
+        if (empty($tag) || ! $this->isValidTagFormat($tag)) {
+            $tag = $this->generate($request);
+            $this->queueCookie($tag);
+
+            return $tag;
+        }
+
+        if ($this->shouldRenew($tag)) {
+            $this->queueCookie($tag);
         }
 
         return $tag;
+    }
+
+    /**
+     * Queue the visitor cookie.
+     */
+    private function queueCookie(string $tag): void
+    {
+        Cookie::queue(
+            config('visitor-tracking.cookie_name'),
+            $tag,
+            config('visitor-tracking.cookie_duration'),
+            '',
+            '',
+            true,
+            true
+        );
+    }
+
+    /**
+     * If the cookie should be renewed
+     */
+    private function shouldRenew(string $tag): bool
+    {
+        $timestamp = $this->extractTimestampFromTag($tag);
+
+        if (! $timestamp) {
+            return false;
+        }
+
+        $ageInSeconds = time() - $timestamp;
+        $threshold = config('visitor-tracking.cookie_duration') * (2 / 3);
+
+        return $ageInSeconds >= $threshold;
+    }
+
+    /**
+     * Extract the timestamp from the tag (after ':')
+     */
+    private function extractTimestampFromTag(string $tag): ?int
+    {
+        $parts = explode(':', $tag);
+        $timestamp = end($parts);
+
+        return is_numeric($timestamp) ? (int) $timestamp : null;
     }
 
     /**
@@ -39,10 +86,39 @@ class VisitorTag
      */
     private function generate(Request $request): string
     {
+        $time = time();
+
         if (! is_null($user = $request->user())) {
-            return 'user_'.$user->id;
+            return 'user_'.$user->id.':'.$time;
         }
 
-        return 'anon_'.Str::uuid().'_'.time();
+        return 'anon_'.Str::uuid().':'.$time;
+    }
+
+    /**
+     * Validate the visitor tag format.
+     * Expected format: prefix (user_ or anon_) + identifier + ':' + timestamp
+     */
+    private function isValidTagFormat(string $tag): bool
+    {
+        if (! str_contains($tag, ':')) {
+            return false;
+        }
+
+        [$prefixPart, $timestampPart] = explode(':', $tag, 2);
+
+        if (empty($prefixPart) || ! is_numeric($timestampPart)) {
+            return false;
+        }
+
+        if ($timestampPart > time()) {
+            return false;
+        }
+
+        if (! Str::startsWith($prefixPart, ['user_', 'anon_'])) {
+            return false;
+        }
+
+        return true;
     }
 }

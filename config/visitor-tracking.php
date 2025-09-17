@@ -27,7 +27,7 @@ return [
     'cookie_name' => 'visitor_tag',
 
     /**
-     * The duration of the visitor cookie.
+     * The duration of the visitor cookie in seconds.
      */
     'cookie_duration' => (60 * 60 * 24) * 365,
 

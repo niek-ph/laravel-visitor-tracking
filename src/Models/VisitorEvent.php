@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use NiekPH\LaravelVisitorTracking\Database\Factories\EventFactory;
 use NiekPH\LaravelVisitorTracking\VisitorTracking;
 
-class Event extends Model
+class VisitorEvent extends Model
 {
     use HasFactory;
 
@@ -16,7 +16,7 @@ class Event extends Model
 
     public function getTable(): string
     {
-        return config('visitor-tracking.table_prefix').'events';
+        return config('visitor-tracking.table_prefix').'visitor_events';
     }
 
     public function getConnectionName()

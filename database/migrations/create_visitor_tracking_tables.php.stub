@@ -27,7 +27,7 @@ return new class extends Migration
                 });
 
         Schema::connection($connection)
-            ->create($this->getTableName('events'), function (Blueprint $table) {
+            ->create($this->getTableName('visitor_events'), function (Blueprint $table) {
                 $this->idColumn($table);
                 $this->foreignVisitorIdColumn($table);
                 $table->string('name')->index();
@@ -42,7 +42,7 @@ return new class extends Migration
         $connection = config('visitor-tracking.db_connection_name');
 
         Schema::connection($connection)->dropIfExists($this->getTableName('visitors'));
-        Schema::connection($connection)->dropIfExists($this->getTableName('events'));
+        Schema::connection($connection)->dropIfExists($this->getTableName('visitor_events'));
     }
 
     private function getTableName(string $table): string

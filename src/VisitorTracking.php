@@ -5,8 +5,8 @@ namespace NiekPH\LaravelVisitorTracking;
 use DeviceDetector\ClientHints;
 use Illuminate\Http\Request;
 use NiekPH\LaravelVisitorTracking\Jobs\TrackEventJob;
-use NiekPH\LaravelVisitorTracking\Models\Event;
 use NiekPH\LaravelVisitorTracking\Models\Visitor;
+use NiekPH\LaravelVisitorTracking\Models\VisitorEvent;
 use NiekPH\LaravelVisitorTracking\TrackingEvents\TrackingEvent;
 
 class VisitorTracking
@@ -19,7 +19,7 @@ class VisitorTracking
     /**
      * The event model class name.
      */
-    public static string $eventModel = Event::class;
+    public static string $eventModel = VisitorEvent::class;
 
     /**
      * Tracks a given event by dispatching a tracking job with relevant data.
@@ -30,7 +30,7 @@ class VisitorTracking
     public function track(Request $request, TrackingEvent $event): void
     {
         $visitorTag = new VisitorTag()->retrieve($request);
-        $clientHints = config('visitor-tracking.enable_client_hints') ? ClientHints::factory($request->headers->all()) : null;
+        $clientHints = config('visitor-tracking.enable_client_hints') ? ClientHints::factory($_SERVER) : null;
 
         TrackEventJob::dispatch($visitorTag, $event, now(), $clientHints);
     }
