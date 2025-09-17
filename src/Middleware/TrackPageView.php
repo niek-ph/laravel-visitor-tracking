@@ -8,10 +8,8 @@ use NiekPH\LaravelVisitorTracking\Facades\VisitorTracking;
 use NiekPH\LaravelVisitorTracking\TrackingEvents\PageViewEvent;
 use Symfony\Component\HttpFoundation\Response;
 
-readonly class TrackPageView
+class TrackPageView
 {
-    public function __construct() {}
-
     /**
      * Handle an incoming request.
      *
