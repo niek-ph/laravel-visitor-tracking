@@ -21,18 +21,23 @@ readonly class TrackPageView
     {
         $response = $next($request);
 
-        if ($this->shouldTrackPageView($request, $response)) {
-            VisitorTracking::track($request, new PageViewEvent($request));
-        }
+        $this->track($request, $response);
 
         return $response;
     }
 
-    /**
-     * Check if the pageview should be tracked
-     */
-    private function shouldTrackPageView(Request $request, Response $response): bool
+    protected function track(Request $request, Response $response): void
     {
+        if (! $this->isTrackablePageView($request, $response)) {
+            return;
+        }
+
+        VisitorTracking::track($request, new PageViewEvent($request));
+    }
+
+    protected function isTrackablePageView(Request $request, Response $response): bool
+    {
+        // Skip on unsuccessful requests
         if (! $response->isSuccessful()) {
             return false;
         }
@@ -42,14 +47,37 @@ readonly class TrackPageView
             return false;
         }
 
+        if ($this->isExcludedRoute($request)) {
+            return false;
+        }
+
         // Handle inertia requests
         if ($request->header('X-Inertia')) {
             // Do not track on partial data loads. (lazy or deferred props)
-            return ! $request->hasHeader('X-Inertia-Partial-Data') &&
-                ! $request->hasHeader('X-Inertia-Partial-Component') &&
-                ! $request->hasHeader('X-Inertia-Partial-Except');
+            return ! $this->isInertiaPartialReload($request);
         }
 
-        return $response->headers->get('Content-Type') === 'text/html; charset=UTF-8';
+        return $this->isHtmlResponse($response);
+    }
+
+    protected function isInertiaPartialReload(Request $request): bool
+    {
+        return $request->hasHeader('X-Inertia-Partial-Data') ||
+             $request->hasHeader('X-Inertia-Partial-Component') ||
+             $request->hasHeader('X-Inertia-Partial-Except');
+    }
+
+    protected function isHtmlResponse(Response $response): bool
+    {
+        $contentType = $response->headers->get('Content-Type', '');
+
+        return str_contains($contentType, 'text/html');
+    }
+
+    protected function isExcludedRoute(Request $request): bool
+    {
+        $excluded = config('visitor-tracking.excluded_paths', []);
+
+        return collect($excluded)->contains(fn ($path) => $request->is($path));
     }
 }

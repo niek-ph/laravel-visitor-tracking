@@ -43,6 +43,11 @@ return [
     'enable_client_hints' => true,
 
     /**
+     * Optional: You can exclude paths using a uri or pattern. Example: /admin/* or /api/*
+     */
+    'excluded_paths' => [],
+
+    /**
      * User ID configuration
      */
     'users' => [
