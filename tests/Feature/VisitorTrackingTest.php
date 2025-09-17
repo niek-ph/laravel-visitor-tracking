@@ -100,7 +100,7 @@ it('tracks authenticated user visits and stores user_id', function () {
         'name' => 'page_view',
     ]);
 
-    expect($visitorTag)->toBe('user_456');
+    expect($visitorTag)->toStartWith('user_456:');
 });
 
 it('updates existing visitor on subsequent visits', function () {

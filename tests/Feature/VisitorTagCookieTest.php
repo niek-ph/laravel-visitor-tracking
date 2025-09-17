@@ -36,5 +36,5 @@ it('generates user-based tag for authenticated users', function () {
     $response->assertCookie('visitor_tag');
 
     $cookie = $response->getCookie('visitor_tag', false);
-    expect($cookie->getValue())->toBe('user_123');
+    expect($cookie->getValue())->toStartWith('user_123');
 });

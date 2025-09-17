@@ -3,13 +3,14 @@
 use NiekPH\LaravelVisitorTracking\VisitorTag;
 
 it('retrieves existing visitor tag from cookies', function () {
+    $time = time();
     $request = Request::create('/');
-    $request->cookies->set(config('visitor-tracking.cookie_name'), 'existing_tag_123');
+    $request->cookies->set(config('visitor-tracking.cookie_name'), "anon_existing_tag_123:$time");
 
     $visitorTag = new VisitorTag;
     $tag = $visitorTag->retrieve($request);
 
-    expect($tag)->toBe('existing_tag_123');
+    expect($tag)->toBe("anon_existing_tag_123:$time");
 });
 
 it('generates new visitor tag when cookie is empty', function () {
@@ -31,7 +32,7 @@ it('generates user-based tag for authenticated users', function () {
     $visitorTag = new VisitorTag;
     $tag = $visitorTag->retrieve($request);
 
-    expect($tag)->toBe('user_123');
+    expect($tag)->toStartWith('user_123');
 });
 
 it('generates anonymous tag for unauthenticated users', function () {
@@ -48,10 +49,11 @@ it('uses custom cookie name from config', function () {
     Config::set('visitor-tracking.cookie_name', 'custom_visitor_tag');
 
     $request = Request::create('/');
-    $request->cookies->set('custom_visitor_tag', 'custom_tag_456');
+    $time = time();
+    $request->cookies->set('custom_visitor_tag', "anon_456:$time");
 
     $visitorTag = new VisitorTag;
     $tag = $visitorTag->retrieve($request);
 
-    expect($tag)->toBe('custom_tag_456');
+    expect($tag)->toBe("anon_456:$time");
 });
