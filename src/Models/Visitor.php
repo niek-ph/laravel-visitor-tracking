@@ -69,9 +69,9 @@ class Visitor extends Model
      * Creates or retrieves an instance based on the provided request.
      *
      * @param  Request  $request  The HTTP request instance containing the incoming client data.
-     * @return self The created or retrieved instance populated with data extracted from the request.
+     * @return static The created or retrieved instance populated with data extracted from the request.
      */
-    public static function fromRequest(Request $request): self
+    public static function fromRequest(Request $request): static
     {
         $tag = new VisitorTag()->retrieve($request);
         $clientHints = config('visitor-tracking.enable_client_hints') ? ClientHints::factory($_SERVER) : null;

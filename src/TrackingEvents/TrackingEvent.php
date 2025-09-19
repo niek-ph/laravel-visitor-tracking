@@ -6,35 +6,15 @@ use Illuminate\Http\Request;
 
 abstract class TrackingEvent
 {
-    public string $ipAddress {
-        get {
-            return $this->ipAddress;
-        }
-    }
+    public string $ipAddress;
 
-    public string $userAgent {
-        get {
-            return $this->userAgent;
-        }
-    }
+    public string $userAgent;
 
-    public int|string|null $userId {
-        get {
-            return $this->userId;
-        }
-    }
+    public int|string|null $userId;
 
-    public ?string $url {
-        get {
-            return $this->url;
-        }
-    }
+    public ?string $url;
 
-    public array $data = [] {
-        get {
-            return $this->data;
-        }
-    }
+    public array $data = [];
 
     public function __construct(Request $request, array $data = [])
     {
