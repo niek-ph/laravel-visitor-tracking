@@ -83,7 +83,7 @@ class Visitor extends Model
         $deviceDetector = new DeviceDetector($userAgent, $clientHints);
         $deviceDetector->parse();
 
-        return (new static)::query()->firstOrCreate([
+        return static::query()->firstOrCreate([
             'tag' => $tag,
             'user_id' => $user?->id,
             'user_agent' => $userAgent,
