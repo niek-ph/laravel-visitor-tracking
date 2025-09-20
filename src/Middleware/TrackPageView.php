@@ -10,6 +10,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TrackPageView
 {
+    private bool $tracked = false;
+
     /**
      * Handle an incoming request.
      *
@@ -17,29 +19,24 @@ class TrackPageView
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $response = $next($request);
+        $this->track($request);
 
-        $this->track($request, $response);
-
-        return $response;
+        return $next($request);
     }
 
-    protected function track(Request $request, Response $response): void
+    protected function track(Request $request): void
     {
-        if (! $this->isTrackablePageView($request, $response)) {
+        if (! $this->isTrackablePageView($request)) {
             return;
         }
 
         VisitorTracking::track($request, new PageViewEvent($request));
+
+        $this->tracked = true;
     }
 
-    protected function isTrackablePageView(Request $request, Response $response): bool
+    protected function isTrackablePageView(Request $request): bool
     {
-        // Skip on unsuccessful requests
-        if (! $response->isSuccessful()) {
-            return false;
-        }
-
         // Skip non get requests
         if (! $request->isMethod('GET')) {
             return false;
@@ -55,7 +52,7 @@ class TrackPageView
             return ! $this->isInertiaPartialReload($request);
         }
 
-        return $this->isHtmlResponse($response);
+        return true;
     }
 
     protected function isInertiaPartialReload(Request $request): bool
@@ -65,17 +62,18 @@ class TrackPageView
              $request->hasHeader('X-Inertia-Partial-Except');
     }
 
-    protected function isHtmlResponse(Response $response): bool
-    {
-        $contentType = $response->headers->get('Content-Type', '');
-
-        return str_contains($contentType, 'text/html');
-    }
-
     protected function isExcludedRoute(Request $request): bool
     {
         $excluded = config('visitor-tracking.excluded_paths', []);
 
         return collect($excluded)->contains(fn ($path) => $request->is($path));
+    }
+
+    /**
+     * Whether a page view has been tracked
+     */
+    protected function isTracked(): bool
+    {
+        return $this->tracked;
     }
 }
