@@ -28,6 +28,13 @@ return [
     'queue_connection' => null,
 
     /**
+     * If the tracking job should use the dispatchAfterResponse() method.
+     * Some environments like AWS lambda do not support dispatchAfterResponse().
+     * Falls back to dispatch() when disabled.
+     */
+    'queue_dispatch_after_response' => true,
+
+    /**
      * The name of the cookie that is used to track the visitor.
      */
     'cookie_name' => 'visitor_tag',

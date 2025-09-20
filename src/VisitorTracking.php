@@ -29,10 +29,16 @@ class VisitorTracking
      */
     public function track(Request $request, TrackingEvent $event): void
     {
+        $config = config('visitor-tracking');
         $visitorTag = new VisitorTag()->retrieve($request);
-        $clientHints = config('visitor-tracking.enable_client_hints') ? ClientHints::factory($_SERVER) : null;
+        $clientHints = $config['enable_client_hints'] ? ClientHints::factory($_SERVER) : null;
 
-        TrackEventJob::dispatch($visitorTag, $event, now(), $clientHints);
+        $method = $config['queue_dispatch_after_response'] ?
+            'dispatchAfterResponse'
+            :
+            'dispatch';
+
+        TrackEventJob::{$method}($visitorTag, $event, now(), $clientHints);
     }
 
     /**
