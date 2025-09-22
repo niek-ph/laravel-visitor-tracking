@@ -12,6 +12,11 @@ class VisitorTrackingServiceProvider extends PackageServiceProvider
 {
     public function bootingPackage(): void
     {
+        $models = $this->app['config']->get('visitor-tracking.models');
+
+        VisitorTracking::useVisitorModel($models['visitor']);
+        VisitorTracking::useEventModel($models['visitor_event']);
+
         $this->app->terminating(fn () => $this->dispatchEvents());
     }
 

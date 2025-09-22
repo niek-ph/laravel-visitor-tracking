@@ -70,4 +70,12 @@ return [
         'column' => 'id',
     ],
 
+    /**
+     * You can optionally override the model classes.
+     */
+    'models' => [
+        'visitor' => \NiekPH\LaravelVisitorTracking\Models\Visitor::class,
+        'visitor_event' => \NiekPH\LaravelVisitorTracking\Models\VisitorEvent::class,
+    ],
+
 ];
