@@ -28,13 +28,6 @@ return [
     'queue_connection' => null,
 
     /**
-     * If the tracking job should use the dispatchAfterResponse() method.
-     * Some environments like AWS lambda do not support dispatchAfterResponse().
-     * Falls back to dispatch() when disabled.
-     */
-    'queue_dispatch_after_response' => true,
-
-    /**
      * The name of the cookie that is used to track the visitor.
      */
     'cookie_name' => 'visitor_tag',
@@ -50,7 +43,7 @@ return [
     'enable_client_hints' => true,
 
     /**
-     * Optional: You can exclude paths using a uri or pattern. Example: /admin/* or /api/*
+     * Optional: You can exclude paths for the TrackPageView middleware using a uri or pattern. Example: /admin/* or /api/*
      */
     'excluded_paths' => [],
 
