@@ -2,9 +2,8 @@
 
 namespace NiekPH\LaravelVisitorTracking;
 
-use DeviceDetector\ClientHints;
 use Illuminate\Http\Request;
-use NiekPH\LaravelVisitorTracking\Jobs\TrackEventJob;
+use Illuminate\Support\Facades\App;
 use NiekPH\LaravelVisitorTracking\Models\Visitor;
 use NiekPH\LaravelVisitorTracking\Models\VisitorEvent;
 use NiekPH\LaravelVisitorTracking\TrackingEvents\TrackingEvent;
@@ -24,21 +23,30 @@ class VisitorTracking
     /**
      * Tracks a given event by dispatching a tracking job with relevant data.
      *
-     * @param  Request  $request  The incoming HTTP request containing necessary data for tracking.
-     * @param  TrackingEvent  $event  The event to be tracked.
+     * @param  TrackingEvent[]|TrackingEvent  $event  The event to be tracked.
      */
-    public function track(Request $request, TrackingEvent $event): void
+    public static function track(array|TrackingEvent $event): void
     {
-        $config = config('visitor-tracking');
-        $visitorTag = new VisitorTag()->retrieve($request);
-        $clientHints = $config['enable_client_hints'] ? ClientHints::factory($_SERVER) : null;
+        try {
+            $buffer = App::make(BatchedEventBuffer::class);
 
-        $method = $config['queue_dispatch_after_response'] ?
-            'dispatchAfterResponse'
-            :
-            'dispatch';
+            if (is_array($event)) {
+                $buffer->pushAll($event);
+            } else {
+                $buffer->push($event);
+            }
 
-        TrackEventJob::{$method}($visitorTag, $event, now(), $clientHints);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    /**
+     * Get the visitor from the request.
+     */
+    public function getVisitorFromRequest(Request $request): Visitor
+    {
+        return static::$visitorModel::fromRequest($request);
     }
 
     /**

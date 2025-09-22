@@ -2,14 +2,13 @@
 
 namespace NiekPH\LaravelVisitorTracking\Models;
 
-use DeviceDetector\ClientHints;
-use DeviceDetector\DeviceDetector;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\Request;
+use NiekPH\LaravelVisitorTracking\ClientData;
 use NiekPH\LaravelVisitorTracking\Database\Factories\VisitorFactory;
 use NiekPH\LaravelVisitorTracking\VisitorTag;
 use NiekPH\LaravelVisitorTracking\VisitorTracking;
@@ -73,27 +72,23 @@ class Visitor extends Model
      */
     public static function fromRequest(Request $request): static
     {
-        $tag = new VisitorTag()->retrieve($request);
-        $clientHints = config('visitor-tracking.enable_client_hints') ? ClientHints::factory($_SERVER) : null;
+        $userId = $request->user()?->id;
 
-        $user = $request->user();
-        $ipAddress = $request->ip();
-        $userAgent = $request->userAgent();
+        $tag = new VisitorTag($request)->getTag();
+        $clientData = new ClientData($request);
 
-        $deviceDetector = new DeviceDetector($userAgent, $clientHints);
-        $deviceDetector->parse();
+        $clientData->detectDevice();
 
         return static::query()->firstOrCreate([
             'tag' => $tag,
-            'user_id' => $user?->id,
-            'user_agent' => $userAgent,
-            'ip_address' => $ipAddress,
-            'is_bot' => $deviceDetector->isBot(),
-            'device' => $deviceDetector->getDeviceName(),
-            'browser' => $deviceDetector->getClient('name'),
-            'platform' => $deviceDetector->getOs('name'),
-            'platform_version' => $deviceDetector->getOs('version'),
-        ]
-        );
+            'user_id' => $userId,
+            'user_agent' => $clientData->getUserAgent(),
+            'ip_address' => $clientData->getIpAddress(),
+            'is_bot' => $clientData->isBot(),
+            'device' => $clientData->getDevice(),
+            'browser' => $clientData->getBrowser(),
+            'platform' => $clientData->getPlatform(),
+            'platform_version' => $clientData->getPlatformVersion(),
+        ]);
     }
 }

@@ -30,7 +30,7 @@ class TrackPageView
             return;
         }
 
-        VisitorTracking::track($request, new PageViewEvent($request));
+        VisitorTracking::track(new PageViewEvent($request));
 
         $this->tracked = true;
     }

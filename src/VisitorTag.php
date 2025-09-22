@@ -8,10 +8,17 @@ use Illuminate\Support\Str;
 
 class VisitorTag
 {
+    private string $tag;
+
+    public function __construct(Request $request)
+    {
+        $this->tag = $this->retrieve($request);
+    }
+
     /**
      * Retrieve the visitor tag from the request or generate a new one and queue it as a cookie.
      */
-    public function retrieve(Request $request): string
+    private function retrieve(Request $request): string
     {
         $tag = $this->getVisitorTagFromCookies($request);
 
@@ -120,5 +127,10 @@ class VisitorTag
         }
 
         return true;
+    }
+
+    public function getTag(): string
+    {
+        return $this->tag;
     }
 }

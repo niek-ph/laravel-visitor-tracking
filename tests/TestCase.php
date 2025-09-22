@@ -57,24 +57,26 @@ class TestCase extends Orchestra
 
     protected function defineRoutes($router): void
     {
-        $router->get('/', function () {
-            return response('<html><body>Test Page</body></html>')
-                ->header('Content-Type', 'text/html; charset=UTF-8');
-        })
-            ->middleware([AddQueuedCookiesToResponse::class, TrackPageView::class])
-            ->name('test.home');
+        $router->group([
+            'middleware' => [AddQueuedCookiesToResponse::class, TrackPageView::class],
+        ], function ($router) {
+            $router->get('/', function () {
+                return response('<html><body>Test Page</body></html>')
+                    ->header('Content-Type', 'text/html; charset=UTF-8');
+            })
+                ->name('test.home');
 
-        $router->get('/test-json', function () {
-            return response()->json(['message' => 'success']);
-        })
-            ->middleware([AddQueuedCookiesToResponse::class, TrackPageView::class])
-            ->name('test.json');
+            $router->get('/test-json', function () {
+                return response()->json(['message' => 'success']);
+            })
+                ->name('test.json');
 
-        $router->post('/test-post', function () {
-            return response('<html><body>Posted</body></html>')
-                ->header('Content-Type', 'text/html; charset=UTF-8');
-        })
-            ->middleware([AddQueuedCookiesToResponse::class, TrackPageView::class])
-            ->name('test.post');
+            $router->post('/test-post', function () {
+                return response('<html><body>Posted</body></html>')
+                    ->header('Content-Type', 'text/html; charset=UTF-8');
+            })
+                ->name('test.post');
+        });
+
     }
 }
