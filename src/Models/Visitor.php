@@ -79,16 +79,19 @@ class Visitor extends Model
 
         $clientData->detectDevice();
 
-        return static::query()->firstOrCreate([
-            'tag' => $tag,
-            'user_id' => $userId,
-            'user_agent' => $clientData->getUserAgent(),
-            'ip_address' => $clientData->getIpAddress(),
-            'is_bot' => $clientData->isBot(),
-            'device' => $clientData->getDevice(),
-            'browser' => $clientData->getBrowser(),
-            'platform' => $clientData->getPlatform(),
-            'platform_version' => $clientData->getPlatformVersion(),
-        ]);
+        return static::query()->firstOrCreate(
+            ['tag' => $tag],
+            [
+                'tag' => $tag,
+                'user_id' => $userId,
+                'user_agent' => $clientData->getUserAgent(),
+                'ip_address' => $clientData->getIpAddress(),
+                'is_bot' => $clientData->isBot(),
+                'device' => $clientData->getDevice(),
+                'browser' => $clientData->getBrowser(),
+                'platform' => $clientData->getPlatform(),
+                'platform_version' => $clientData->getPlatformVersion(),
+            ]
+        );
     }
 }
