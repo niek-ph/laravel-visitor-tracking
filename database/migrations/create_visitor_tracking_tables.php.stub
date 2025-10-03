@@ -16,7 +16,7 @@ return new class extends Migration
                     $this->idColumn($table);
                     $table->string('tag')->unique();
                     $table->string('ip_address')->nullable();
-                    $table->string('user_agent')->nullable();
+                    $table->string('user_agent', 1024)->nullable();
                     $this->addUserIdColumn($table);
                     $table->boolean('is_bot')->nullable();
                     $table->string('device')->nullable();
@@ -31,7 +31,7 @@ return new class extends Migration
                 $this->idColumn($table);
                 $this->foreignVisitorIdColumn($table);
                 $table->string('name')->index();
-                $table->string('url')->nullable();
+                $table->string('url', 1024)->nullable();
                 $table->json('data')->nullable();
                 $table->timestamp('created_at')->index();
             });

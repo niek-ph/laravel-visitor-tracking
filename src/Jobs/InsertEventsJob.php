@@ -8,6 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use NiekPH\LaravelVisitorTracking\TrackingEvents\TrackingEvent;
 use NiekPH\LaravelVisitorTracking\VisitorTracking;
 
@@ -52,13 +53,13 @@ class InsertEventsJob implements ShouldQueue
                     $visitorData[] = [
                         'tag' => $tag,
                         'user_id' => $event->getUserId(),
-                        'user_agent' => $event->getClientData()->getUserAgent(),
-                        'ip_address' => $event->getClientData()->getIpAddress(),
+                        'user_agent' => Str::substr($event->getClientData()->getUserAgent(), 0, 1024),
+                        'ip_address' => Str::substr($event->getClientData()->getIpAddress(), 0, 255),
                         'is_bot' => $event->getClientData()->isBot(),
-                        'device' => $event->getClientData()->getDevice(),
-                        'browser' => $event->getClientData()->getBrowser(),
-                        'platform' => $event->getClientData()->getPlatform(),
-                        'platform_version' => $event->getClientData()->getPlatformVersion(),
+                        'device' => Str::substr($event->getClientData()->getDevice(), 0, 255),
+                        'browser' => Str::substr($event->getClientData()->getBrowser(), 0, 255),
+                        'platform' => Str::substr($event->getClientData()->getPlatform(), 0, 255),
+                        'platform_version' => Str::substr($event->getClientData()->getPlatformVersion(), 0, 255),
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
@@ -67,7 +68,7 @@ class InsertEventsJob implements ShouldQueue
                 $eventData[] = [
                     'tag' => $tag,
                     'name' => $event->getName(),
-                    'url' => $event->getUrl(),
+                    'url' => Str::substr($event->getUrl(), 0, 1024),
                     'data' => json_encode($event->getData()),
                     'created_at' => $event->getTimestamp(),
                 ];
