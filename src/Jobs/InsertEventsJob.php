@@ -53,13 +53,13 @@ class InsertEventsJob implements ShouldQueue
                     $visitorData[] = [
                         'tag' => $tag,
                         'user_id' => $event->getUserId(),
-                        'user_agent' => Str::substr($event->getClientData()->getUserAgent(), 0, 1024),
-                        'ip_address' => Str::substr($event->getClientData()->getIpAddress(), 0, 255),
+                        'user_agent' => Str::substr($event->getClientData()->getUserAgent() ?? '', 0, 1024),
+                        'ip_address' => Str::substr($event->getClientData()->getIpAddress() ?? '', 0, 255),
                         'is_bot' => $event->getClientData()->isBot(),
-                        'device' => Str::substr($event->getClientData()->getDevice(), 0, 255),
-                        'browser' => Str::substr($event->getClientData()->getBrowser(), 0, 255),
-                        'platform' => Str::substr($event->getClientData()->getPlatform(), 0, 255),
-                        'platform_version' => Str::substr($event->getClientData()->getPlatformVersion(), 0, 255),
+                        'device' => Str::substr($event->getClientData()->getDevice() ?? '', 0, 255),
+                        'browser' => Str::substr($event->getClientData()->getBrowser() ?? '', 0, 255),
+                        'platform' => Str::substr($event->getClientData()->getPlatform() ?? '', 0, 255),
+                        'platform_version' => Str::substr($event->getClientData()->getPlatformVersion() ?? '', 0, 255),
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
@@ -68,7 +68,7 @@ class InsertEventsJob implements ShouldQueue
                 $eventData[] = [
                     'tag' => $tag,
                     'name' => $event->getName(),
-                    'url' => Str::substr($event->getUrl(), 0, 1024),
+                    'url' => Str::substr($event->getUrl() ?? '', 0, 1024),
                     'data' => json_encode($event->getData()),
                     'created_at' => $event->getTimestamp(),
                 ];
