@@ -80,9 +80,7 @@ class Visitor extends Model
         $userId = $request->user()?->id;
 
         $tag = new VisitorTag($request)->getTag();
-        $clientData = new ClientData($request);
-
-        $clientData->detect();
+        $clientData = new ClientData($request)->detect();
 
         return static::query()->firstOrCreate(
             ['tag' => $tag],
@@ -96,6 +94,11 @@ class Visitor extends Model
                 'browser' => $clientData->getBrowser(),
                 'platform' => $clientData->getPlatform(),
                 'platform_version' => $clientData->getPlatformVersion(),
+                'geo_country' => $clientData->getCountryCode(),
+                'geo_region' => $clientData->getRegion(),
+                'geo_city' => $clientData->getCity(),
+                'geo_latitude' => $clientData->getLatitude(),
+                'geo_longitude' => $clientData->getLongitude(),
             ]
         );
     }
