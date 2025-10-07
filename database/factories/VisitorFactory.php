@@ -25,6 +25,11 @@ class VisitorFactory extends Factory
             'browser' => $this->faker->randomElement(['chrome', 'firefox', 'opera', 'safari']),
             'platform' => $this->faker->randomElement(['windows', 'macos', 'android', 'ios', 'linux']),
             'platform_version' => $this->faker->semver(),
+            'geo_country' => $this->faker->countryCode(),
+            'geo_region' => null,
+            'geo_city' => $this->faker->city(),
+            'geo_latitude' => $this->faker->latitude(),
+            'geo_longitude' => $this->faker->longitude(),
         ];
     }
 }

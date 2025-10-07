@@ -37,43 +37,58 @@ class InsertEventsJob implements ShouldQueue
             return;
         }
 
-        DB::transaction(function () {
-            $now = now();
-            $visitorData = [];
-            $visitorTagMap = [];
-            $eventData = [];
+        $now = now();
+        $visitorData = [];
+        $visitorTagMap = [];
+        $eventData = [];
 
-            foreach ($this->events as $event) {
-                $event->getClientData()->detectDevice();
-                $tag = $event->getVisitorTag()->getTag();
+        foreach ($this->events as $event) {
+            $clientData = $event->getClientData()->detect();
+            $tag = $event->getVisitorTag()->getTag();
 
-                // Deduplicate visitors within the batch
-                if (! isset($visitorTagMap[$tag])) {
-                    $visitorTagMap[$tag] = true;
-                    $visitorData[] = [
-                        'tag' => $tag,
-                        'user_id' => $event->getUserId(),
-                        'user_agent' => Str::substr($event->getClientData()->getUserAgent() ?? '', 0, 1024),
-                        'ip_address' => Str::substr($event->getClientData()->getIpAddress() ?? '', 0, 255),
-                        'is_bot' => $event->getClientData()->isBot(),
-                        'device' => Str::substr($event->getClientData()->getDevice() ?? '', 0, 255),
-                        'browser' => Str::substr($event->getClientData()->getBrowser() ?? '', 0, 255),
-                        'platform' => Str::substr($event->getClientData()->getPlatform() ?? '', 0, 255),
-                        'platform_version' => Str::substr($event->getClientData()->getPlatformVersion() ?? '', 0, 255),
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ];
-                }
+            // Deduplicate visitors within the batch
+            if (! isset($visitorTagMap[$tag])) {
+                $visitorTagMap[$tag] = true;
 
-                $eventData[] = [
+                $userAgent = $clientData->getUserAgent();
+                $ipAddress = $clientData->getIpAddress();
+                $device = $clientData->getDevice();
+                $browser = $clientData->getBrowser();
+                $platform = $clientData->getPlatform();
+                $platformVersion = $clientData->getPlatformVersion();
+
+                $visitorData[] = [
                     'tag' => $tag,
-                    'name' => $event->getName(),
-                    'url' => Str::substr($event->getUrl() ?? '', 0, 1024),
-                    'data' => json_encode($event->getData()),
-                    'created_at' => $event->getTimestamp(),
+                    'user_id' => $event->getUserId(),
+                    'user_agent' => empty($userAgent) ? null : Str::substr($userAgent, 0, 1024),
+                    'ip_address' => empty($ipAddress) ? null : Str::substr($ipAddress, 0, 255),
+                    'is_bot' => $clientData->isBot(),
+                    'device' => empty($device) ? null : Str::substr($device, 0, 255),
+                    'browser' => empty($browser) ? null : Str::substr($browser, 0, 255),
+                    'platform' => empty($platform) ? null : Str::substr($platform, 0, 255),
+                    'platform_version' => empty($platformVersion) ? null : Str::substr($platformVersion, 0, 255),
+                    'geo_country' => $clientData->getCountryCode(),
+                    'geo_region' => $clientData->getRegion(),
+                    'geo_city' => $clientData->getCity(),
+                    'geo_latitude' => $clientData->getLatitude(),
+                    'geo_longitude' => $clientData->getLongitude(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ];
             }
 
+            $url = $event->getUrl();
+
+            $eventData[] = [
+                'tag' => $tag,
+                'name' => $event->getName(),
+                'url' => empty($url) ? null : Str::substr($url, 0, 1024),
+                'data' => json_encode($event->getData()),
+                'created_at' => $event->getTimestamp(),
+            ];
+        }
+
+        DB::transaction(function () use ($eventData, $visitorTagMap, $visitorData) {
             if (! empty($visitorData)) {
                 VisitorTracking::$visitorModel::upsert(
                     $visitorData,
@@ -98,6 +113,7 @@ class InsertEventsJob implements ShouldQueue
                 ->toArray();
 
             $insertEvents = [];
+
             foreach ($eventData as $event) {
                 $insertEvents[] = [
                     'visitor_id' => $visitors[$event['tag']],
@@ -108,9 +124,8 @@ class InsertEventsJob implements ShouldQueue
                 ];
             }
 
-            if (! empty($insertEvents)) {
-                VisitorTracking::$eventModel::insert($insertEvents);
-            }
+            VisitorTracking::$eventModel::insert($insertEvents);
+
         });
     }
 }

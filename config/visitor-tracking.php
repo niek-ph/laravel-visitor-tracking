@@ -43,6 +43,12 @@ return [
     'enable_client_hints' => true,
 
     /**
+     * Whether gathering geo location for the ip address is enabled.
+     * Uses https://seeip.org/ for collecting basic ip geo information.
+     */
+    'enable_geo_ip_lookup' => true,
+
+    /**
      * Optional: You can exclude paths for the TrackPageView middleware using a uri or pattern. Example: /admin/* or /api/*
      */
     'excluded_paths' => [],

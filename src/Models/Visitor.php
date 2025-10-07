@@ -42,6 +42,11 @@ class Visitor extends Model
         'browser',
         'platform',
         'platform_version',
+        'geo_country',
+        'geo_region',
+        'geo_city',
+        'geo_latitude',
+        'geo_longitude',
     ];
 
     protected function casts(): array
@@ -77,7 +82,7 @@ class Visitor extends Model
         $tag = new VisitorTag($request)->getTag();
         $clientData = new ClientData($request);
 
-        $clientData->detectDevice();
+        $clientData->detect();
 
         return static::query()->firstOrCreate(
             ['tag' => $tag],

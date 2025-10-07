@@ -23,6 +23,12 @@ return new class extends Migration
                     $table->string('browser')->nullable();
                     $table->string('platform')->nullable();
                     $table->string('platform_version')->nullable();
+                    $table->string('geo_country')->nullable();
+                    $table->string('geo_region')->nullable();
+                    $table->string('geo_city')->nullable();
+                    $table->float('geo_latitude')->nullable();
+                    $table->float('geo_longitude')->nullable();
+
                     $table->timestamps();
                 });
 
