@@ -21,7 +21,7 @@ class VisitorFactory extends Factory
             'user_agent' => $this->faker->userAgent(),
             'user_id' => null,
             'is_bot' => $this->faker->boolean(),
-            'device' => $this->faker->macPlatformToken(),
+            'device' => $this->faker->randomElement(['smartphone', 'desktop', 'tablet', 'phablet']),
             'browser' => $this->faker->randomElement(['chrome', 'firefox', 'opera', 'safari']),
             'platform' => $this->faker->randomElement(['windows', 'macos', 'android', 'ios', 'linux']),
             'platform_version' => $this->faker->semver(),
