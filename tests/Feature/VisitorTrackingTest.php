@@ -142,3 +142,22 @@ it('updates existing visitor on subsequent visits', function () {
     expect($visitor->events)->toHaveCount(2);
     expect($visitor->events->pluck('name')->toArray())->toBe(['page_view', 'page_view']);
 });
+
+it('stores visitor tag in laravel context when existing cookie is found', function () {
+    // Create a valid visitor tag manually
+    $existingTag = 'anon_'.\Illuminate\Support\Str::uuid().':'.time();
+
+    // Create a request with the existing cookie
+    $request = \Illuminate\Http\Request::create('/', 'GET');
+    $request->cookies->set(config('visitor-tracking.cookie_name'), $existingTag);
+
+    // Clear any existing context
+    \Illuminate\Support\Facades\Context::flush();
+
+    // Create VisitorTag instance which should store the tag in context
+    $visitorTag = new \NiekPH\LaravelVisitorTracking\VisitorTag($request);
+
+    // Assert the visitor tag was stored in context
+    expect(\Illuminate\Support\Facades\Context::get('visitor_tag'))->toBe($existingTag);
+    expect($visitorTag->getTag())->toBe($existingTag);
+});

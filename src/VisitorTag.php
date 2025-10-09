@@ -3,6 +3,7 @@
 namespace NiekPH\LaravelVisitorTracking;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
 
@@ -33,7 +34,17 @@ class VisitorTag
             $this->queueCookie($tag);
         }
 
+        $this->storeInContext($tag);
+
         return $tag;
+    }
+
+    /**
+     * Store the visitor tag in context so the visitor is easily identifiable in logs.
+     */
+    private function storeInContext(string $tag): void
+    {
+        Context::add('visitor_tag', $tag);
     }
 
     /**
