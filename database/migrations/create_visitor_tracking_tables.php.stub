@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $connection = config('visitor-tracking.db_connection_name');
+        $connection = config('visitor-tracking.database.connection');
 
         Schema::connection($connection)
             ->create($this->getTableName('visitors'),
@@ -45,7 +45,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        $connection = config('visitor-tracking.db_connection_name');
+        $connection = config('visitor-tracking.database.connection');
 
         Schema::connection($connection)->dropIfExists($this->getTableName('visitors'));
         Schema::connection($connection)->dropIfExists($this->getTableName('visitor_events'));
@@ -53,7 +53,7 @@ return new class extends Migration
 
     private function getTableName(string $table): string
     {
-        return config('visitor-tracking.table_prefix').$table;
+        return config("visitor-tracking.database.tables.$table");
     }
 
     private function addUserIdColumn(Blueprint $table): void
@@ -76,7 +76,7 @@ return new class extends Migration
      */
     private function idColumn(Blueprint $table): void
     {
-        $idType = config('visitor-tracking.id_type', 'bigInteger');
+        $idType = config('visitor-tracking.database.id_type', 'bigInteger');
 
         match ($idType) {
             'uuid' => $table->uuid()->primary(),
@@ -91,7 +91,7 @@ return new class extends Migration
      */
     private function foreignVisitorIdColumn(Blueprint $table): void
     {
-        $idType = config('visitor-tracking.id_type', 'bigInteger');
+        $idType = config('visitor-tracking.database.id_type', 'bigInteger');
 
         match ($idType) {
             'uuid' => $table->foreignUuid('visitor_id')->constrained('visitors')->onDelete('cascade'),

@@ -19,12 +19,12 @@ class Visitor extends Model
 
     public function getTable(): string
     {
-        return config('visitor-tracking.table_prefix').'visitors';
+        return config('visitor-tracking.database.tables.visitors', 'visitors');
     }
 
     public function getConnectionName()
     {
-        return config('visitor-tracking.db_connection_name');
+        return config('visitor-tracking.database.connection');
     }
 
     protected static function newFactory(): VisitorFactory

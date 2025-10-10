@@ -2,32 +2,6 @@
 
 return [
     /**
-     * The type of user ID column to create in the migration.
-     * Options: 'uuid', 'ulid', 'bigInteger'
-     */
-    'id_type' => 'bigInteger',
-
-    /**
-     * Optional: You can customize the database connection.
-     */
-    'db_connection_name' => null,
-
-    /**
-     * Optional: Provide a custom prefix for the table names.
-     */
-    'table_prefix' => null,
-
-    /**
-     * The queue on which the tracking job should be executed.
-     */
-    'queue_name' => null,
-
-    /**
-     * The queue connection on which the tracking job should be executed.
-     */
-    'queue_connection' => null,
-
-    /**
      * The name of the cookie that is used to track the visitor.
      */
     'cookie_name' => 'visitor_tag',
@@ -84,4 +58,36 @@ return [
         'visitor_event' => \NiekPH\LaravelVisitorTracking\Models\VisitorEvent::class,
     ],
 
+    'database' => [
+        /**
+         * The type of user ID column to create in the migration.
+         * Options: 'uuid', 'ulid', 'bigInteger'
+         */
+        'id_type' => 'bigInteger',
+
+        /**
+         * Optional: You can customize the database connection.
+         */
+        'connection' => null,
+
+        /**
+         * You can optionally override the table names.
+         */
+        'tables' => [
+            'visitors' => 'visitors',
+            'visitor_events' => 'visitor_events',
+        ],
+    ],
+
+    'queue' => [
+        /**
+         * The queue on which the tracking job should be executed.
+         */
+        'name' => null,
+
+        /**
+         * The queue connection on which the tracking job should be executed.
+         */
+        'connection' => null,
+    ],
 ];

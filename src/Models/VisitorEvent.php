@@ -16,12 +16,12 @@ class VisitorEvent extends Model
 
     public function getTable(): string
     {
-        return config('visitor-tracking.table_prefix').'visitor_events';
+        return config('visitor-tracking.database.tables.visitor_events', 'visitor_events');
     }
 
     public function getConnectionName()
     {
-        return config('visitor-tracking.db_connection_name');
+        return config('visitor-tracking.database.connection');
     }
 
     protected static function newFactory(): EventFactory

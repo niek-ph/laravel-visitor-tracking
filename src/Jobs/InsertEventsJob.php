@@ -22,11 +22,11 @@ class InsertEventsJob implements ShouldQueue
     public function __construct(
         public array $events = []
     ) {
-        if (! is_null($connection = config('visitor-tracking.queue_connection'))) {
+        if (! is_null($connection = config('visitor-tracking.queue.connection'))) {
             $this->onConnection($connection);
         }
 
-        if (! is_null($queue = config('visitor-tracking.queue_name'))) {
+        if (! is_null($queue = config('visitor-tracking.queue.name'))) {
             $this->onQueue($queue);
         }
     }
