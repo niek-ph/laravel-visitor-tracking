@@ -89,23 +89,21 @@ class InsertEventsJob implements ShouldQueue
         }
 
         DB::transaction(function () use ($eventData, $visitorTagMap, $visitorData) {
-            if (! empty($visitorData)) {
-                VisitorTracking::$visitorModel::upsert(
-                    $visitorData,
-                    ['tag'],
-                    [
-                        'user_id',
-                        'user_agent',
-                        'ip_address',
-                        'is_bot',
-                        'device',
-                        'browser',
-                        'platform',
-                        'platform_version',
-                        'updated_at',
-                    ]
-                );
-            }
+            VisitorTracking::$visitorModel::upsert(
+                $visitorData,
+                ['tag'],
+                [
+                    'user_id',
+                    'user_agent',
+                    'ip_address',
+                    'is_bot',
+                    'device',
+                    'browser',
+                    'platform',
+                    'platform_version',
+                    'updated_at',
+                ]
+            );
 
             $visitorTags = array_keys($visitorTagMap);
             $visitors = VisitorTracking::$visitorModel::whereIn('tag', $visitorTags)
