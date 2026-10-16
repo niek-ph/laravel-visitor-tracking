@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
@@ -86,7 +87,7 @@ describe('GeoIP Detection', function () {
     it('handles api timeout gracefully', function () {
         Http::fake([
             'api.seeip.org/geoip/*' => function () {
-                throw new \Illuminate\Http\Client\ConnectionException('Connection timeout');
+                throw new ConnectionException('Connection timeout');
             },
         ]);
 

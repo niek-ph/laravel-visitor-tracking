@@ -5,6 +5,7 @@ namespace NiekPH\LaravelVisitorTracking\Tests;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\File;
 use NiekPH\LaravelVisitorTracking\Middleware\TrackPageView;
 use NiekPH\LaravelVisitorTracking\VisitorTrackingServiceProvider;
@@ -38,7 +39,7 @@ class TestCase extends Orchestra
     /**
      * Define environment setup.
      *
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param  Application  $app
      */
     protected function defineEnvironment($app): void
     {

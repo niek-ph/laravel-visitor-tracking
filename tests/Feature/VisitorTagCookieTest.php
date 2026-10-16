@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -27,7 +28,7 @@ it('reuses existing visitor tag from cookie', function () {
 });
 
 it('generates user-based tag for authenticated users', function () {
-    $user = new \Illuminate\Foundation\Auth\User;
+    $user = new User;
     $user->id = 123;
 
     $response = $this->actingAs($user)->get('/');

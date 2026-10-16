@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Foundation\Auth\User;
 use NiekPH\LaravelVisitorTracking\VisitorTag;
 
 it('retrieves existing visitor tag from cookies', function () {
@@ -21,7 +22,7 @@ it('generates new visitor tag when cookie is empty', function () {
 });
 
 it('generates user-based tag for authenticated users', function () {
-    $user = new \Illuminate\Foundation\Auth\User;
+    $user = new User;
     $user->id = 123;
 
     $request = Request::create('/');

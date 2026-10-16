@@ -1,5 +1,8 @@
 <?php
 
+use NiekPH\LaravelVisitorTracking\Models\Visitor;
+use NiekPH\LaravelVisitorTracking\Models\VisitorEvent;
+
 return [
     /**
      * The name of the cookie that is used to track the visitor.
@@ -54,8 +57,8 @@ return [
      * You can optionally override the model classes.
      */
     'models' => [
-        'visitor' => \NiekPH\LaravelVisitorTracking\Models\Visitor::class,
-        'visitor_event' => \NiekPH\LaravelVisitorTracking\Models\VisitorEvent::class,
+        'visitor' => Visitor::class,
+        'visitor_event' => VisitorEvent::class,
     ],
 
     'database' => [

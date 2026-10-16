@@ -1,8 +1,13 @@
 <?php
 
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use NiekPH\LaravelVisitorTracking\Jobs\InsertEventsJob;
+use NiekPH\LaravelVisitorTracking\VisitorTag;
 use NiekPH\LaravelVisitorTracking\VisitorTracking;
 
 uses(RefreshDatabase::class);
@@ -65,7 +70,7 @@ it('tracks authenticated user visits and stores user_id', function () {
     Queue::fake();
 
     // Create a user and authenticate
-    $user = new \Illuminate\Foundation\Auth\User;
+    $user = new User;
     $user->id = 456;
 
     $userAgent = generateUserAgent();
@@ -145,19 +150,19 @@ it('updates existing visitor on subsequent visits', function () {
 
 it('stores visitor tag in laravel context when existing cookie is found', function () {
     // Create a valid visitor tag manually
-    $existingTag = 'anon_'.\Illuminate\Support\Str::uuid().':'.time();
+    $existingTag = 'anon_'.Str::uuid().':'.time();
 
     // Create a request with the existing cookie
-    $request = \Illuminate\Http\Request::create('/', 'GET');
+    $request = Request::create('/', 'GET');
     $request->cookies->set(config('visitor-tracking.cookie_name'), $existingTag);
 
     // Clear any existing context
-    \Illuminate\Support\Facades\Context::flush();
+    Context::flush();
 
     // Create VisitorTag instance which should store the tag in context
-    $visitorTag = new \NiekPH\LaravelVisitorTracking\VisitorTag($request);
+    $visitorTag = new VisitorTag($request);
 
     // Assert the visitor tag was stored in context
-    expect(\Illuminate\Support\Facades\Context::get('visitor_tag'))->toBe($existingTag);
+    expect(Context::get('visitor_tag'))->toBe($existingTag);
     expect($visitorTag->getTag())->toBe($existingTag);
 });
