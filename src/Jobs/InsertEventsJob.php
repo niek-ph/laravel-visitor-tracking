@@ -151,7 +151,7 @@ class InsertEventsJob implements ShouldQueue
             }
 
             foreach ($rows as $row) {
-                $insertEvents[] = ['visitor_id' => $visitorIds[$tag], ...$row];
+                $insertEvents[] = $this->withNewId(['visitor_id' => $visitorIds[$tag], ...$row]);
             }
         }
 
@@ -248,7 +248,7 @@ class InsertEventsJob implements ShouldQueue
      */
     private function visitorRow(string $tag, array $events, ClientData $clientData, CarbonInterface $now): array
     {
-        return [
+        return $this->withNewId([
             'tag' => $tag,
             'user_id' => $this->userIdOf($events),
             'user_agent' => $this->limit($clientData->getUserAgent(), 1024),
@@ -265,7 +265,20 @@ class InsertEventsJob implements ShouldQueue
             'geo_longitude' => $clientData->getLongitude(),
             'created_at' => $now,
             'updated_at' => $now,
-        ];
+        ]);
+    }
+
+    /**
+     * Add a generated primary key when `database.id_type` is uuid or ulid.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    private function withNewId(array $row): array
+    {
+        $id = VisitorTracking::newId();
+
+        return $id === null ? $row : ['id' => $id, ...$row];
     }
 
     /**

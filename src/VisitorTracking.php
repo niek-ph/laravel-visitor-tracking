@@ -7,6 +7,7 @@ use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use NiekPH\LaravelVisitorTracking\Models\Visitor;
 use NiekPH\LaravelVisitorTracking\Models\VisitorEvent;
 use NiekPH\LaravelVisitorTracking\TrackingEvents\IdentifyEvent;
@@ -100,6 +101,19 @@ class VisitorTracking
         }
 
         return data_get($user, config('visitor-tracking.users.column') ?? 'id') ?? $user->getAuthIdentifier();
+    }
+
+    /**
+     * A new primary key for a visitor or event when `database.id_type` is uuid or ulid, the same kind
+     * as Laravel's HasUuids and HasUlids make. Null for auto-incrementing ids.
+     */
+    public static function newId(): ?string
+    {
+        return match (config('visitor-tracking.database.id_type', 'bigInteger')) {
+            'uuid' => (string) Str::uuid7(),
+            'ulid' => strtolower((string) Str::ulid()),
+            default => null,
+        };
     }
 
     /**

@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use NiekPH\LaravelVisitorTracking\Database\Factories\EventFactory;
+use NiekPH\LaravelVisitorTracking\Models\Concerns\UsesConfiguredIdType;
 use NiekPH\LaravelVisitorTracking\VisitorTracking;
 
 class VisitorEvent extends Model
 {
-    use HasFactory;
+    use HasFactory, UsesConfiguredIdType;
 
     public $timestamps = false;
 

@@ -10,12 +10,13 @@ use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\Request;
 use NiekPH\LaravelVisitorTracking\ClientData;
 use NiekPH\LaravelVisitorTracking\Database\Factories\VisitorFactory;
+use NiekPH\LaravelVisitorTracking\Models\Concerns\UsesConfiguredIdType;
 use NiekPH\LaravelVisitorTracking\VisitorTag;
 use NiekPH\LaravelVisitorTracking\VisitorTracking;
 
 class Visitor extends Model
 {
-    use HasFactory;
+    use HasFactory, UsesConfiguredIdType;
 
     public function getTable(): string
     {
