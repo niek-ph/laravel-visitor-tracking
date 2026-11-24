@@ -13,6 +13,9 @@ class ClientData
 
     private ?string $userAgent;
 
+    /**
+     * @var array<string, string>
+     */
     private array $requestHeaders;
 
     private bool $isBot = false;
@@ -39,7 +42,27 @@ class ClientData
     {
         $this->ipAddress = $request->ip();
         $this->userAgent = $request->userAgent();
-        $this->requestHeaders = $_SERVER;
+        $this->requestHeaders = $this->clientHintHeaders($request);
+    }
+
+    /**
+     * The request headers that the device detector's client hints read: the Sec-CH-UA headers
+     * and X-Requested-With. Nothing else is kept, because this object is serialized into the
+     * queued job, and the server variables also hold the environment's secrets.
+     *
+     * @return array<string, string>
+     */
+    private function clientHintHeaders(Request $request): array
+    {
+        $headers = [];
+
+        foreach (array_keys($request->headers->all()) as $name) {
+            if (str_starts_with($name, 'sec-ch-ua') || $name === 'x-requested-with') {
+                $headers[$name] = (string) $request->headers->get($name);
+            }
+        }
+
+        return $headers;
     }
 
     /**
@@ -147,6 +170,11 @@ class ClientData
         return $this->isBot;
     }
 
+    /**
+     * The client hint headers of the request, keyed by lowercase header name.
+     *
+     * @return array<string, string>
+     */
     public function getRequestHeaders(): array
     {
         return $this->requestHeaders;

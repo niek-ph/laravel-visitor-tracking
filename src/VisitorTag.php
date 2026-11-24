@@ -48,14 +48,14 @@ class VisitorTag
     }
 
     /**
-     * Queue the visitor cookie.
+     * Queue the visitor cookie. The duration is configured in seconds, the cookie jar takes minutes.
      */
     private function queueCookie(string $tag): void
     {
         Cookie::queue(
             config('visitor-tracking.cookie_name'),
             $tag,
-            config('visitor-tracking.cookie_duration'),
+            (int) ceil(config('visitor-tracking.cookie_duration') / 60),
             '',
             '',
             true,
