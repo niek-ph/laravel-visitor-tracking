@@ -14,6 +14,16 @@ it('sets visitor tag cookie on first visit', function () {
     expect($cookie->getValue())->toStartWith('anon_');
 });
 
+it('keeps the visitor tag cookie for the configured duration', function () {
+    $this->freezeTime();
+
+    $response = $this->get('/');
+
+    $cookie = $response->getCookie(\config('visitor-tracking.cookie_name'), false);
+    expect($cookie->getExpiresTime())
+        ->toBe(now()->addSeconds(\config('visitor-tracking.cookie_duration'))->getTimestamp());
+});
+
 it('reuses existing visitor tag from cookie', function () {
     // First request sets the cookie
     $firstResponse = $this->get('/');
