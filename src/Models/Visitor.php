@@ -56,10 +56,13 @@ class Visitor extends Model
         ];
     }
 
+    /**
+     * The account the visitor is linked to: the configured model, or the model of the default user provider.
+     */
     public function user(): BelongsTo
     {
-        $userModel = config('auth.providers.users.model') ?? User::class;
-        $userColumn = config('visitor-tracking.users.column', 'id');
+        $userModel = config('visitor-tracking.users.model') ?? config('auth.providers.users.model') ?? User::class;
+        $userColumn = config('visitor-tracking.users.column') ?? 'id';
 
         return $this->belongsTo($userModel, 'user_id', $userColumn);
     }
@@ -77,7 +80,7 @@ class Visitor extends Model
      */
     public static function fromRequest(Request $request): static
     {
-        $userId = $request->user()?->id;
+        $userId = VisitorTracking::userIdFromRequest($request);
 
         $tag = new VisitorTag($request)->getTag();
         $clientData = new ClientData($request)->detect();

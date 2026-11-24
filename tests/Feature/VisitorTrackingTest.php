@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
@@ -18,6 +19,9 @@ function generateUserAgent(): string
 }
 
 it('tracks visitors and stores them in database with events', function () {
+    // Store the visitor on its first request; the returning visitor flow has its own tests.
+    Config::set('visitor-tracking.require_returning_visitor', false);
+
     // Disable queue processing to run jobs synchronously
     Queue::fake();
 
@@ -67,6 +71,7 @@ it('tracks visitors and stores them in database with events', function () {
 });
 
 it('tracks authenticated user visits and stores user_id', function () {
+    Config::set('visitor-tracking.require_returning_visitor', false);
     Queue::fake();
 
     // Create a user and authenticate
@@ -123,7 +128,8 @@ it('updates existing visitor on subsequent visits', function () {
     $cookie = $response->getCookie(config('visitor-tracking.cookie_name'), false);
     $visitorTag = $cookie->getValue();
 
-    $response2 = $this->get('/', [
+    // The browser sends the cookie back, which also stores the page view of the first visit
+    $response2 = $this->withUnencryptedCookie(config('visitor-tracking.cookie_name'), $visitorTag)->get('/', [
         'User-Agent' => $userAgent,
     ]);
 

@@ -53,7 +53,10 @@ class VisitorTrackingServiceProvider extends PackageServiceProvider
                 return;
             }
 
-            InsertEventsJob::dispatch($buffer->getAll());
+            $events = $buffer->getAll();
+            $buffer->flush();
+
+            InsertEventsJob::dispatch($events);
         } catch (\Throwable $exception) {
             report($exception);
         }

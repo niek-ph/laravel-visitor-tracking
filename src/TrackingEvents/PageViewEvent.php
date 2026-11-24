@@ -8,4 +8,9 @@ class PageViewEvent extends TrackingEvent
     {
         return 'page_view';
     }
+
+    public function createsVisitor(): bool
+    {
+        return false;
+    }
 }

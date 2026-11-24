@@ -169,3 +169,13 @@ it('handles large number of events', function () {
     expect($buffer->getAll())->toHaveCount(100);
     expect($buffer->getAll())->toBe($events);
 });
+
+it('dispatches every event once', function () {
+    Queue::fake();
+
+    VisitorTracking::track(createTrackingEvent('page_view'));
+    app()->terminate();
+    app()->terminate();
+
+    Queue::assertPushed(InsertEventsJob::class, 1);
+});
