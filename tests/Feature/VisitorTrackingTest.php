@@ -5,6 +5,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use NiekPH\LaravelVisitorTracking\Jobs\InsertEventsJob;
@@ -77,6 +78,7 @@ it('tracks authenticated user visits and stores user_id', function () {
     // Create a user and authenticate
     $user = new User;
     $user->id = 456;
+    DB::table('users')->insert(['id' => 456]);
 
     $userAgent = generateUserAgent();
 

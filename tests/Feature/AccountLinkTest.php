@@ -4,6 +4,7 @@ use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use NiekPH\LaravelVisitorTracking\Jobs\InsertEventsJob;
 use NiekPH\LaravelVisitorTracking\Models\Visitor;
@@ -18,8 +19,13 @@ beforeEach(function () {
     $this->withUnencryptedCookie(config('visitor-tracking.cookie_name'), 'anon_returning:'.time());
 });
 
+/**
+ * A user that also exists in the users table, for the foreign key on Postgres and MySQL.
+ */
 function userWithId(int $id): User
 {
+    DB::table('users')->insertOrIgnore(['id' => $id]);
+
     $user = new User;
     $user->id = $id;
 
@@ -45,7 +51,7 @@ it('keeps the account link when the visitor is anonymous again', function () {
 it('links the visitor to an account through identify', function () {
     $request = Request::create('/inloggen', 'POST', server: ['HTTP_USER_AGENT' => chromeUserAgent()]);
 
-    VisitorTracking::identify($request, 42, ['method' => 'password']);
+    VisitorTracking::identify($request, userWithId(42)->id, ['method' => 'password']);
     app()->terminate();
     handleQueuedTrackingJobs();
 

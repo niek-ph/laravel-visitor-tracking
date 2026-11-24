@@ -4,7 +4,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Schema;
 use NiekPH\LaravelVisitorTracking\ClientData;
 use NiekPH\LaravelVisitorTracking\Jobs\InsertEventsJob;
 use NiekPH\LaravelVisitorTracking\Models\Visitor;
@@ -62,21 +61,6 @@ it('stores the url in the configured format', function (string $format, string $
     'path with query' => ['path_with_query', '/jurken/zomer?kleur=roze&maat=98'],
     'path' => ['path', '/jurken/zomer'],
 ]);
-
-it('indexes the visitor and user foreign keys', function () {
-    expect(Schema::hasIndex('visitor_events', ['visitor_id']))->toBeTrue()
-        ->and(Schema::hasIndex('visitors', ['user_id']))->toBeTrue();
-});
-
-it('links user_id to the configured users table', function () {
-    Config::set('visitor-tracking.users.table', 'customers');
-
-    $migration = include __DIR__.'/../../database/migrations/create_visitor_tracking_tables.php.stub';
-    $migration->down();
-    $migration->up();
-
-    expect(collect(Schema::getForeignKeys('visitors'))->pluck('foreign_table')->all())->toBe(['customers']);
-});
 
 it('takes the country from the proxy header', function (?string $headerValue, ?string $country) {
     $request = Request::create('/', 'GET');

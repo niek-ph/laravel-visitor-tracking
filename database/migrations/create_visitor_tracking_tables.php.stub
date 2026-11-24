@@ -75,6 +75,8 @@ return new class extends Migration
     }
 
     /**
+     * The primary key, always named id: the foreign key of visitor_events refers to it.
+     *
      * @throws \Exception
      */
     private function idColumn(Blueprint $table): void
@@ -82,8 +84,8 @@ return new class extends Migration
         $idType = config('visitor-tracking.database.id_type', 'bigInteger');
 
         match ($idType) {
-            'uuid' => $table->uuid()->primary(),
-            'ulid' => $table->ulid()->primary(),
+            'uuid' => $table->uuid('id')->primary(),
+            'ulid' => $table->ulid('id')->primary(),
             'bigInteger' => $table->id(),
             default => throw new \Exception('Invalid id type. Must be uuid, ulid or bigInteger.'),
         };
