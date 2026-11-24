@@ -2,10 +2,15 @@
 
 namespace NiekPH\LaravelVisitorTracking;
 
+use Closure;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use NiekPH\LaravelVisitorTracking\Models\Visitor;
 use NiekPH\LaravelVisitorTracking\Models\VisitorEvent;
+use NiekPH\LaravelVisitorTracking\TrackingEvents\IdentifyEvent;
 use NiekPH\LaravelVisitorTracking\TrackingEvents\TrackingEvent;
 
 class VisitorTracking
@@ -21,6 +26,13 @@ class VisitorTracking
     public static string $eventModel = VisitorEvent::class;
 
     /**
+     * Decides per request whether it is tracked. Set once while the application boots.
+     *
+     * @var (Closure(Request): bool)|null
+     */
+    protected static ?Closure $trackWhen = null;
+
+    /**
      * Tracks a given event by dispatching a tracking job with relevant data.
      *
      * @param  TrackingEvent[]|TrackingEvent  $event  The event to be tracked.
@@ -28,6 +40,10 @@ class VisitorTracking
     public static function track(array|TrackingEvent $event): void
     {
         try {
+            if (! static::shouldTrack(App::make('request'))) {
+                return;
+            }
+
             $buffer = App::make(BatchedEventBuffer::class);
 
             if (is_array($event)) {
@@ -39,6 +55,73 @@ class VisitorTracking
         } catch (\Throwable $exception) {
             report($exception);
         }
+    }
+
+    /**
+     * Links the visitor of the request to an account, for example after logging in. Stores the visitor
+     * right away when it was not stored yet, and records an "identify" event.
+     */
+    public static function identify(Request $request, int|string $userId, array $data = []): void
+    {
+        static::track(new IdentifyEvent($request, $userId, $data));
+    }
+
+    /**
+     * Only track requests for which the callback returns true, for example to skip staff or visitors
+     * without consent. Register it once, in a service provider. Pass null to track every request again.
+     *
+     * @param  (Closure(Request): bool)|null  $callback
+     */
+    public static function trackWhen(?Closure $callback): void
+    {
+        static::$trackWhen = $callback;
+    }
+
+    /**
+     * Whether the request is tracked.
+     */
+    public static function shouldTrack(Request $request): bool
+    {
+        if (static::$trackWhen === null) {
+            return true;
+        }
+
+        return (bool) (static::$trackWhen)($request);
+    }
+
+    /**
+     * The id of the account that is logged in on the request, from the configured guard and column.
+     */
+    public static function userIdFromRequest(Request $request): int|string|null
+    {
+        $user = $request->user(config('visitor-tracking.users.guard'));
+
+        if ($user === null) {
+            return null;
+        }
+
+        return data_get($user, config('visitor-tracking.users.column') ?? 'id') ?? $user->getAuthIdentifier();
+    }
+
+    /**
+     * A new primary key for a visitor or event when `database.id_type` is uuid or ulid, the same kind
+     * as Laravel's HasUuids and HasUlids make. Null for auto-incrementing ids.
+     */
+    public static function newId(): ?string
+    {
+        return match (config('visitor-tracking.database.id_type', 'bigInteger')) {
+            'uuid' => (string) Str::uuid7(),
+            'ulid' => strtolower((string) Str::ulid()),
+            default => null,
+        };
+    }
+
+    /**
+     * The cache store for pending page views and page view deduplication.
+     */
+    public static function cache(): Repository
+    {
+        return Cache::store(config('visitor-tracking.cache_store'));
     }
 
     /**

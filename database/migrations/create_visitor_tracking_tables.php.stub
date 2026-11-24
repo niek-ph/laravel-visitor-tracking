@@ -38,7 +38,7 @@ return new class extends Migration
                 $this->foreignVisitorIdColumn($table);
                 $table->string('name')->index();
                 $table->string('url', 1024)->nullable();
-                $table->json('data')->nullable();
+                $table->jsonb('data')->nullable();
                 $table->timestamp('created_at')->index();
             });
     }
@@ -47,8 +47,8 @@ return new class extends Migration
     {
         $connection = config('visitor-tracking.database.connection');
 
-        Schema::connection($connection)->dropIfExists($this->getTableName('visitors'));
         Schema::connection($connection)->dropIfExists($this->getTableName('visitor_events'));
+        Schema::connection($connection)->dropIfExists($this->getTableName('visitors'));
     }
 
     private function getTableName(string $table): string
@@ -56,22 +56,27 @@ return new class extends Migration
         return config("visitor-tracking.database.tables.$table");
     }
 
+    /**
+     * The nullable, indexed link to the users table. Postgres does not index foreign keys itself.
+     */
     private function addUserIdColumn(Blueprint $table): void
     {
         $userIdConfig = config('visitor-tracking.users', []);
         $type = $userIdConfig['id_type'];
-        $usersTable = $userIdConfig['users_table'] ?? 'users';
-        $usersColumn = $userIdConfig['users_column'] ?? 'id';
+        $usersTable = $userIdConfig['table'] ?? $userIdConfig['users_table'] ?? 'users';
+        $usersColumn = $userIdConfig['column'] ?? $userIdConfig['users_column'] ?? 'id';
 
         match ($type) {
-            'uuid' => $table->foreignUuid('user_id')->nullable()->references($usersColumn)->on($usersTable)->onDelete('cascade'),
-            'ulid' => $table->foreignUlid('user_id')->nullable()->references($usersColumn)->on($usersTable)->onDelete('cascade'),
-            'bigInteger' => $table->foreignId('user_id')->nullable()->references($usersColumn)->on($usersTable)->onDelete('cascade'),
+            'uuid' => $table->foreignUuid('user_id')->nullable()->index()->references($usersColumn)->on($usersTable)->onDelete('cascade'),
+            'ulid' => $table->foreignUlid('user_id')->nullable()->index()->references($usersColumn)->on($usersTable)->onDelete('cascade'),
+            'bigInteger' => $table->foreignId('user_id')->nullable()->index()->references($usersColumn)->on($usersTable)->onDelete('cascade'),
             default => throw new \Exception('Invalid user id type. Must be uuid, ulid or bigInteger.'),
         };
     }
 
     /**
+     * The primary key, always named id: the foreign key of visitor_events refers to it.
+     *
      * @throws \Exception
      */
     private function idColumn(Blueprint $table): void
@@ -79,24 +84,27 @@ return new class extends Migration
         $idType = config('visitor-tracking.database.id_type', 'bigInteger');
 
         match ($idType) {
-            'uuid' => $table->uuid()->primary(),
-            'ulid' => $table->ulid()->primary(),
+            'uuid' => $table->uuid('id')->primary(),
+            'ulid' => $table->ulid('id')->primary(),
             'bigInteger' => $table->id(),
             default => throw new \Exception('Invalid id type. Must be uuid, ulid or bigInteger.'),
         };
     }
 
     /**
+     * The indexed link to the visitors table. Postgres does not index foreign keys itself.
+     *
      * @throws \Exception
      */
     private function foreignVisitorIdColumn(Blueprint $table): void
     {
         $idType = config('visitor-tracking.database.id_type', 'bigInteger');
+        $visitorsTable = $this->getTableName('visitors');
 
         match ($idType) {
-            'uuid' => $table->foreignUuid('visitor_id')->constrained('visitors')->onDelete('cascade'),
-            'ulid' => $table->foreignUlid('visitor_id')->constrained('visitors')->onDelete('cascade'),
-            'bigInteger' => $table->foreignId('visitor_id')->constrained('visitors')->onDelete('cascade'),
+            'uuid' => $table->foreignUuid('visitor_id')->index()->constrained($visitorsTable)->onDelete('cascade'),
+            'ulid' => $table->foreignUlid('visitor_id')->index()->constrained($visitorsTable)->onDelete('cascade'),
+            'bigInteger' => $table->foreignId('visitor_id')->index()->constrained($visitorsTable)->onDelete('cascade'),
             default => throw new \Exception('Invalid id type. Must be uuid, ulid or bigInteger.'),
         };
     }

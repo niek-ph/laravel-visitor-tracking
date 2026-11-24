@@ -10,12 +10,13 @@ use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\Request;
 use NiekPH\LaravelVisitorTracking\ClientData;
 use NiekPH\LaravelVisitorTracking\Database\Factories\VisitorFactory;
+use NiekPH\LaravelVisitorTracking\Models\Concerns\UsesConfiguredIdType;
 use NiekPH\LaravelVisitorTracking\VisitorTag;
 use NiekPH\LaravelVisitorTracking\VisitorTracking;
 
 class Visitor extends Model
 {
-    use HasFactory;
+    use HasFactory, UsesConfiguredIdType;
 
     public function getTable(): string
     {
@@ -56,10 +57,13 @@ class Visitor extends Model
         ];
     }
 
+    /**
+     * The account the visitor is linked to: the configured model, or the model of the default user provider.
+     */
     public function user(): BelongsTo
     {
-        $userModel = config('auth.providers.users.model') ?? User::class;
-        $userColumn = config('visitor-tracking.users.column', 'id');
+        $userModel = config('visitor-tracking.users.model') ?? config('auth.providers.users.model') ?? User::class;
+        $userColumn = config('visitor-tracking.users.column') ?? 'id';
 
         return $this->belongsTo($userModel, 'user_id', $userColumn);
     }
@@ -77,7 +81,7 @@ class Visitor extends Model
      */
     public static function fromRequest(Request $request): static
     {
-        $userId = $request->user()?->id;
+        $userId = VisitorTracking::userIdFromRequest($request);
 
         $tag = new VisitorTag($request)->getTag();
         $clientData = new ClientData($request)->detect();

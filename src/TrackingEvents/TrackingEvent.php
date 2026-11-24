@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use NiekPH\LaravelVisitorTracking\ClientData;
 use NiekPH\LaravelVisitorTracking\VisitorTag;
+use NiekPH\LaravelVisitorTracking\VisitorTracking;
 
 abstract class TrackingEvent
 {
@@ -23,8 +24,8 @@ abstract class TrackingEvent
 
     public function __construct(Request $request, array $data = [], ?Carbon $timestamp = null)
     {
-        $this->url = $request->fullUrl();
-        $this->userId = $request->user()?->id;
+        $this->url = $this->urlFrom($request);
+        $this->userId = VisitorTracking::userIdFromRequest($request);
         $this->data = $data;
         $this->timestamp = $timestamp ?? now();
 
@@ -33,6 +34,27 @@ abstract class TrackingEvent
     }
 
     abstract public function getName(): string;
+
+    /**
+     * Whether this event stores a visitor that has not sent the visitor cookie back yet. Page views do
+     * not, so clients that never keep cookies do not create visitors (see `require_returning_visitor`).
+     */
+    public function createsVisitor(): bool
+    {
+        return true;
+    }
+
+    /**
+     * The url of the request in the configured format.
+     */
+    private function urlFrom(Request $request): string
+    {
+        return match (config('visitor-tracking.url_format', 'full')) {
+            'path' => $request->getPathInfo(),
+            'path_with_query' => $request->getPathInfo().(($query = $request->getQueryString()) !== null ? '?'.$query : ''),
+            default => $request->fullUrl(),
+        };
+    }
 
     public function getTimestamp(): Carbon
     {
@@ -72,5 +94,10 @@ abstract class TrackingEvent
     public function setTimestamp(Carbon $timestamp): void
     {
         $this->timestamp = $timestamp;
+    }
+
+    public function setUserId(int|string|null $userId): void
+    {
+        $this->userId = $userId;
     }
 }

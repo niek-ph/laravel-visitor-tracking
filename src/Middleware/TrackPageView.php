@@ -6,6 +6,8 @@ use Closure;
 use Illuminate\Http\Request;
 use NiekPH\LaravelVisitorTracking\Facades\VisitorTracking;
 use NiekPH\LaravelVisitorTracking\TrackingEvents\PageViewEvent;
+use NiekPH\LaravelVisitorTracking\VisitorTag;
+use NiekPH\LaravelVisitorTracking\VisitorTracking as Tracking;
 use Symfony\Component\HttpFoundation\Response;
 
 class TrackPageView
@@ -37,8 +39,12 @@ class TrackPageView
 
     protected function isTrackablePageView(Request $request): bool
     {
-        // Skip non get requests
+        // Skip non get requests, HEAD requests included
         if (! $request->isMethod('GET')) {
+            return false;
+        }
+
+        if ($this->isPrefetch($request)) {
             return false;
         }
 
@@ -46,13 +52,49 @@ class TrackPageView
             return false;
         }
 
-        // Handle inertia requests
-        if ($request->header('X-Inertia')) {
-            // Do not track on partial data loads. (lazy or deferred props)
-            return ! $this->isInertiaPartialReload($request);
+        // Do not track on Inertia partial data loads (lazy or deferred props)
+        if ($request->header('X-Inertia') && $this->isInertiaPartialReload($request)) {
+            return false;
         }
 
-        return true;
+        if (! Tracking::shouldTrack($request)) {
+            return false;
+        }
+
+        return ! $this->isRepeatedPageView($request);
+    }
+
+    /**
+     * Whether the browser fetches the page ahead of a possible visit: Inertia and link prefetching,
+     * Chrome's speculation rules (prefetch and prerender) and Safari's previews.
+     */
+    protected function isPrefetch(Request $request): bool
+    {
+        $purpose = strtolower(implode(' ', [
+            $request->header('Purpose', ''),
+            $request->header('Sec-Purpose', ''),
+            $request->header('X-Purpose', ''),
+            $request->header('X-Moz', ''),
+        ]));
+
+        return str_contains($purpose, 'prefetch') || str_contains($purpose, 'preview');
+    }
+
+    /**
+     * Whether the visitor viewed the same url within `deduplicate_page_views_for` seconds.
+     */
+    protected function isRepeatedPageView(Request $request): bool
+    {
+        $seconds = (int) config('visitor-tracking.deduplicate_page_views_for');
+
+        if ($seconds <= 0) {
+            return false;
+        }
+
+        $tag = new VisitorTag($request)->getTag();
+        $key = 'visitor-tracking:page-view:'.sha1($tag.'|'.$request->getRequestUri());
+
+        return ! Tracking::cache()->add($key, true, $seconds);
     }
 
     protected function isInertiaPartialReload(Request $request): bool

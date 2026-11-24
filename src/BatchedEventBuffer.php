@@ -35,4 +35,12 @@ class BatchedEventBuffer
     {
         return $this->events;
     }
+
+    /**
+     * Remove all events, once they are dispatched.
+     */
+    public function flush(): void
+    {
+        $this->events = [];
+    }
 }

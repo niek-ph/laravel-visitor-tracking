@@ -9,17 +9,50 @@ use Illuminate\Support\Str;
 
 class VisitorTag
 {
+    /**
+     * The request attribute that holds the tag, so every event of one request gets the same tag.
+     */
+    private const string REQUEST_ATTRIBUTE = 'visitor_tracking_tag';
+
     private string $tag;
+
+    /**
+     * Whether the browser sent the tag back in the cookie. True for jobs queued before this was
+     * recorded, so those still store their visitor.
+     */
+    private bool $returning = true;
 
     public function __construct(Request $request)
     {
-        $this->tag = $this->retrieve($request);
+        [$this->tag, $this->returning] = $this->resolve($request);
+    }
+
+    /**
+     * The tag of the request: resolved once per request and then reused.
+     *
+     * @return array{0: string, 1: bool}
+     */
+    private function resolve(Request $request): array
+    {
+        $resolved = $request->attributes->get(self::REQUEST_ATTRIBUTE);
+
+        if (is_array($resolved)) {
+            return $resolved;
+        }
+
+        $resolved = $this->retrieve($request);
+        $request->attributes->set(self::REQUEST_ATTRIBUTE, $resolved);
+        $this->storeInContext($resolved[0]);
+
+        return $resolved;
     }
 
     /**
      * Retrieve the visitor tag from the request or generate a new one and queue it as a cookie.
+     *
+     * @return array{0: string, 1: bool}
      */
-    private function retrieve(Request $request): string
+    private function retrieve(Request $request): array
     {
         $tag = $this->getVisitorTagFromCookies($request);
 
@@ -27,16 +60,14 @@ class VisitorTag
             $tag = $this->generate($request);
             $this->queueCookie($tag);
 
-            return $tag;
+            return [$tag, false];
         }
 
         if ($this->shouldRenew($tag)) {
             $this->queueCookie($tag);
         }
 
-        $this->storeInContext($tag);
-
-        return $tag;
+        return [$tag, true];
     }
 
     /**
@@ -106,8 +137,8 @@ class VisitorTag
     {
         $time = time();
 
-        if (! is_null($user = $request->user())) {
-            return 'user_'.$user->id.':'.$time;
+        if (! is_null($userId = VisitorTracking::userIdFromRequest($request))) {
+            return 'user_'.$userId.':'.$time;
         }
 
         return 'anon_'.Str::uuid().':'.$time;
@@ -143,5 +174,13 @@ class VisitorTag
     public function getTag(): string
     {
         return $this->tag;
+    }
+
+    /**
+     * Whether the browser sent the visitor cookie back, so it is not a first request without the cookie.
+     */
+    public function isReturning(): bool
+    {
+        return $this->returning;
     }
 }

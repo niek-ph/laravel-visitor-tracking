@@ -8,6 +8,7 @@ use NiekPH\LaravelVisitorTracking\ClientData;
 
 beforeEach(function () {
     Config::set('visitor-tracking.enable_geo_ip_lookup', true);
+    Config::set('visitor-tracking.anonymize_ip_address', false);
     Config::set('visitor-tracking.enable_client_hints', false);
 });
 

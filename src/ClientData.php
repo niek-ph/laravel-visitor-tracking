@@ -6,6 +6,7 @@ use DeviceDetector\ClientHints;
 use DeviceDetector\DeviceDetector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Symfony\Component\HttpFoundation\IpUtils;
 
 class ClientData
 {
@@ -40,9 +41,55 @@ class ClientData
 
     public function __construct(Request $request)
     {
-        $this->ipAddress = $request->ip();
+        $this->ipAddress = $this->ipAddressFrom($request);
         $this->userAgent = $request->userAgent();
         $this->requestHeaders = $this->clientHintHeaders($request);
+        $this->countryCode = $this->countryCodeFrom($request);
+    }
+
+    /**
+     * The ip address of the request, anonymized right away when configured, so the full address is
+     * never queued or stored. Taken from the configured proxy header when it holds a valid address.
+     */
+    private function ipAddressFrom(Request $request): ?string
+    {
+        $header = config('visitor-tracking.ip_address_header');
+        $headerValue = empty($header) ? null : trim((string) $request->header($header));
+
+        $ipAddress = ! empty($headerValue) && filter_var($headerValue, FILTER_VALIDATE_IP) !== false
+            ? $headerValue
+            : $request->ip();
+
+        if (empty($ipAddress) || ! config('visitor-tracking.anonymize_ip_address')) {
+            return $ipAddress;
+        }
+
+        if (filter_var($ipAddress, FILTER_VALIDATE_IP) === false) {
+            return null;
+        }
+
+        return IpUtils::anonymize($ipAddress, 1, 10);
+    }
+
+    /**
+     * The country code from the configured proxy header, like Cloudflare's CF-IPCountry. Cloudflare sends
+     * XX when the country is unknown and T1 for the Tor network; those are not countries.
+     */
+    private function countryCodeFrom(Request $request): ?string
+    {
+        $header = config('visitor-tracking.country_header');
+
+        if (empty($header)) {
+            return null;
+        }
+
+        $countryCode = strtoupper(trim((string) $request->header($header)));
+
+        if (preg_match('/^[A-Z]{2}$/', $countryCode) !== 1 || in_array($countryCode, ['XX', 'T1'], true)) {
+            return null;
+        }
+
+        return $countryCode;
     }
 
     /**
@@ -66,9 +113,29 @@ class ClientData
     }
 
     /**
-     * Run the device detector
+     * Run the device detector and, for visitors that are not bots, the geo ip lookup.
      */
     public function detect(): self
+    {
+        return $this->detectDevice()->detectLocation();
+    }
+
+    /**
+     * Look up the location of the ip address when the geo ip lookup is enabled. Skipped for bots.
+     */
+    public function detectLocation(): self
+    {
+        if (! $this->isBot && config('visitor-tracking.enable_geo_ip_lookup')) {
+            $this->detectGeoIp();
+        }
+
+        return $this;
+    }
+
+    /**
+     * Run the device detector: device, browser, platform and whether the client is a bot.
+     */
+    public function detectDevice(): self
     {
         $clientHints = config('visitor-tracking.enable_client_hints') ?
             ClientHints::factory($this->requestHeaders)
@@ -90,10 +157,6 @@ class ClientData
         $this->browser = $this->isEmptyOrUnknown($browser) ? null : $browser;
         $this->platform = $this->isEmptyOrUnknown($platform) ? null : $platform;
         $this->platformVersion = $this->isEmptyOrUnknown($platformVersion) ? null : $platformVersion;
-
-        if (! $isBot && config('visitor-tracking.enable_geo_ip_lookup')) {
-            $this->detectGeoIp();
-        }
 
         return $this;
     }
@@ -129,7 +192,8 @@ class ClientData
 
     private function setGeoIpData(array $json): void
     {
-        if (! empty($json['country_code'])) {
+        // The proxy's country header wins over the lookup
+        if (! empty($json['country_code']) && $this->countryCode === null) {
             $this->countryCode = $json['country_code'];
         }
 

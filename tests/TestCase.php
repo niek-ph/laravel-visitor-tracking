@@ -6,10 +6,11 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\File;
 use NiekPH\LaravelVisitorTracking\Middleware\TrackPageView;
 use NiekPH\LaravelVisitorTracking\VisitorTrackingServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
+
+use function Orchestra\Testbench\load_migration_paths;
 
 class TestCase extends Orchestra
 {
@@ -29,11 +30,12 @@ class TestCase extends Orchestra
         ];
     }
 
-    public function getEnvironmentSetUp($app): void
+    /**
+     * Register the package migration, so RefreshDatabase runs it on the test connection.
+     */
+    protected function defineDatabaseMigrations(): void
     {
-        foreach (File::allFiles(__DIR__.'/../database/migrations') as $migration) {
-            (include $migration->getRealPath())->up();
-        }
+        load_migration_paths($this->app, __DIR__.'/database/migrations');
     }
 
     /**
@@ -43,10 +45,11 @@ class TestCase extends Orchestra
      */
     protected function defineEnvironment($app): void
     {
-        // Setup default database to use sqlite :memory:
+        // SQLite in memory by default. DB_CONNECTION=pgsql or DB_CONNECTION=mysql runs the tests on that
+        // database, configured through DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME and DB_PASSWORD.
         tap($app['config'], function (Repository $config) {
             $config->set('session.encrypt', false);
-            $config->set('database.default', 'testbench');
+            $config->set('database.default', env('DB_CONNECTION', 'testbench'));
             $config->set('database.connections.testbench', [
                 'driver' => 'sqlite',
                 'database' => ':memory:',
